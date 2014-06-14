@@ -109,9 +109,14 @@ MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 5, 0, 1440, CFGFLAG_SE
 /* Bla-Client */
 
 // Blood
-MACRO_CONFIG_INT(Blood, gie_blood, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod")
-MACRO_CONFIG_INT(BloodDamage, gie_blood_damage, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod damage")
+MACRO_CONFIG_INT(Blood, blood, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod")
+MACRO_CONFIG_INT(BloodDamage, blood_damage, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod damage")
 
+// Radar stuff
+MACRO_CONFIG_INT(XPos, radar_x_pos, 450, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Radar x position")
+MACRO_CONFIG_INT(YPos, radar_y_pos, 80, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Radar y position")
+MACRO_CONFIG_INT(ClRadar, enable_radar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Radar on / off")
+MACRO_CONFIG_INT(UseXY, radar_use_xy, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use radar y/x axis")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

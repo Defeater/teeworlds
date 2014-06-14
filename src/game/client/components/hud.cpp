@@ -593,9 +593,70 @@ void CHud::OnRender()
 		RenderWarmupTimer();
 		RenderFps();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		MiniMap();
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
 		RenderVoting();
 	}
 	RenderCursor();
 }
+
+void CHud::MiniMap()
+{
+  if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+	return;
+	
+  if(g_Config.m_ClRadar)
+{
+ 
+ float aX;
+ float aY;
+
+ aX = g_Config.m_XPos;
+ aY = g_Config.m_YPos;
+
+ vec2 Startpos(aX, aY);
+
+ Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+ Graphics()->QuadsBegin();
+
+ Graphics()->SetColor(0, 0, 0, 0.5f);
+ RenderTools()->DrawRoundRect(Startpos.x, Startpos.y, 74, 74, 0.99f);
+
+ Graphics()->SetColor(0,1,0,0.40f);
+ RenderTools()->DrawRoundRect(Startpos.x + 2, Startpos.y + 2, 70, 70, 35.3f);
+
+ int LocalID = m_pClient->m_LocalClientID;
+
+ vec2 OwnPos(m_pClient->m_Snap.m_aCharacters[LocalID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[LocalID].m_Cur.m_Y);
+
+ Graphics()->SetColor(1,1,0,0.75f);
+ vec2 Center(Startpos.x+2 + 70/2 - 1, Startpos.y+2 + 70/2 - 1);
+ RenderTools()->DrawRoundRect(Center.x, Center.y, 2, 2, 0.0f);
+
+ for(int i = 0; i < MAX_CLIENTS; i++)
+ {
+  if(!m_pClient->m_Snap.m_aCharacters[i].m_Active || i == LocalID)
+   continue;
+
+  CNetObj_Character *pCharacter = &m_pClient->m_Snap.m_aCharacters[i].m_Cur;
+
+  if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+  {
+   int Team = m_pClient->m_aClients[i].m_Team;
+   Graphics()->SetColor(Team?0:1,0,Team?1:0,0.75f);
+
+   if(Team == -1)
+
+    Graphics()->SetColor(1,0,1,0.75f);
+  }
+  else
+   Graphics()->SetColor(1,0,1,0.75f);
+
+  vec2 Position = Center + (vec2(pCharacter->m_X, pCharacter->m_Y) - OwnPos)*0.031f;
+  RenderTools()->DrawRoundRect(Position.x, Position.y, 2, 2, 0.0f);
+ }
+
+ Graphics()->QuadsEnd();
+}
+  }
