@@ -49,7 +49,28 @@ void CEffects::AirJump(vec2 Pos)
 
 void CEffects::DamageIndicator(vec2 Pos, vec2 Dir)
 {
-	m_pClient->m_pDamageind->Create(Pos, Dir);
+    if(g_Config.m_BloodDamage)
+	{
+		for(int i = 0; i < 32; i++)
+		{
+			CParticle p;
+			p.SetDefault();
+			p.m_Spr = SPRITE_PART_SMOKE;
+			p.m_Pos = Pos;
+			p.m_Vel = Dir * (frandom()+0.1f)*900.0f;
+			p.m_LifeSpan = 0.3f + frandom()*0.3f;
+			p.m_StartSize = 9.0f + frandom()*12;
+			p.m_EndSize = 0;
+			p.m_Rot = 0;
+			p.m_Rotspeed = 0;
+			p.m_Gravity = 8000.0f;
+			p.m_Friction = 0.8f;
+			p.m_Color = vec4(0.7f,0.0f,0.0f,1.0f);
+			m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+		}
+	}
+	else
+		m_pClient->m_pDamageind->Create(Pos, Dir);
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)
@@ -166,23 +187,46 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 		}
 	}
 
-	for(int i = 0; i < 64; i++)
+	if(g_Config.m_Blood)
 	{
-		CParticle p;
-		p.SetDefault();
-		p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
-		p.m_Pos = Pos;
-		p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
-		p.m_LifeSpan = 0.3f + frandom()*0.3f;
-		p.m_StartSize = 24.0f + frandom()*16;
-		p.m_EndSize = 0;
-		p.m_Rot = frandom()*pi*2;
-		p.m_Rotspeed = (frandom()-0.5f) * pi;
-		p.m_Gravity = 800.0f;
-		p.m_Friction = 0.8f;
-		vec3 c = BloodColor * (0.75f + frandom()*0.25f);
-		p.m_Color = vec4(c.r, c.g, c.b, 0.75f);
-		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+		 for(int i = 0; i < 64; i++)
+		{
+			CParticle p;
+			p.SetDefault();
+			p.m_Spr = SPRITE_PART_SMOKE;
+			p.m_Pos = Pos;
+			p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
+			p.m_LifeSpan = 20.0f;
+			p.m_StartSize = 9.0f + frandom()*12;
+			p.m_EndSize = 0;
+			p.m_Rot = 0;
+			p.m_Rotspeed = 0;
+			p.m_Gravity = 8000.0f;
+			p.m_Friction = 0.8f;
+			p.m_Color = vec4(0.7f,0.0f,0.0f,1.0f);
+			m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+		}
+	}
+	else
+	{
+		for(int i = 0; i < 64; i++)
+		{
+			CParticle p;
+			p.SetDefault();
+			p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
+			p.m_Pos = Pos;
+			p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
+			p.m_LifeSpan = 0.3f + frandom()*0.3f;
+			p.m_StartSize = 24.0f + frandom()*16;
+			p.m_EndSize = 0;
+			p.m_Rot = frandom()*pi*2;
+			p.m_Rotspeed = (frandom()-0.5f) * pi;
+			p.m_Gravity = 800.0f;
+			p.m_Friction = 0.8f;
+			vec3 c = BloodColor * (0.75f + frandom()*0.25f);
+			p.m_Color = vec4(c.r, c.g, c.b, 0.75f);
+			m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+		}
 	}
 }
 
