@@ -69,7 +69,6 @@ private:
 	{
 		int m_AmmoRegenStart;
 		int m_Ammo;
-		int m_Ammocost;
 		bool m_Got;
 
 	} m_aWeapons[NUM_WEAPONS];
@@ -95,7 +94,6 @@ private:
 	CNetObj_PlayerInput m_LatestInput;
 
 	// input
-	CNetObj_PlayerInput m_PrevInput;
 	CNetObj_PlayerInput m_Input;
 	int m_NumInputs;
 	int m_Jumped;

@@ -157,6 +157,12 @@ class Weapons(Struct):
 		self.ninja = Weapon_Ninja()
 		self.id = Array(WeaponSpec())
 
+class Explosion(Struct):
+	def __init__(self):
+		Struct.__init__(self, "CDataExplosion")
+		self.radius = Float(135)
+		self.max_force = Float(12)
+
 class DataContainer(Struct):
 	def __init__(self):
 		Struct.__init__(self, "CDataContainer")
@@ -167,6 +173,7 @@ class DataContainer(Struct):
 		self.sprites = Array(Sprite())
 		self.animations = Array(Animation())
 		self.weapons = Weapons()
+		self.explosion = Explosion()
 
 def FileList(format, num):
 	return [format%(x+1) for x in range(0,num)]
@@ -265,7 +272,7 @@ container.pickups.Add(Pickup("ninja", 90, 90))
 set_particles = SpriteSet("particles", image_particles, 8, 8)
 set_game = SpriteSet("game", image_game, 32, 16)
 set_tee_body = SpriteSet("tee_body", image_null, 2, 2)
-set_tee_tattoos = SpriteSet("tee_tattoos", image_null, 1, 1)
+set_tee_markings = SpriteSet("tee_markings", image_null, 1, 1)
 set_tee_decoration = SpriteSet("tee_decoration", image_null, 2, 1)
 set_tee_hands = SpriteSet("tee_hands", image_null, 2, 1)
 set_tee_feet = SpriteSet("tee_feet", image_null, 2, 1)
@@ -283,7 +290,7 @@ set_infoicons = SpriteSet("infoicons", image_infoicons, 1, 2)
 container.spritesets.Add(set_particles)
 container.spritesets.Add(set_game)
 container.spritesets.Add(set_tee_body)
-container.spritesets.Add(set_tee_tattoos)
+container.spritesets.Add(set_tee_markings)
 container.spritesets.Add(set_tee_decoration)
 container.spritesets.Add(set_tee_hands)
 container.spritesets.Add(set_tee_feet)
@@ -381,7 +388,7 @@ container.sprites.Add(Sprite("tee_body", set_tee_body, 1,0,1,1))
 container.sprites.Add(Sprite("tee_body_shadow", set_tee_body, 0,1,1,1))
 container.sprites.Add(Sprite("tee_body_upper_outline", set_tee_body, 1,1,1,1))
 
-container.sprites.Add(Sprite("tee_tattoo", set_tee_tattoos, 0,0,1,1))
+container.sprites.Add(Sprite("tee_marking", set_tee_markings, 0,0,1,1))
 
 container.sprites.Add(Sprite("tee_decoration", set_tee_decoration, 0,0,1,1))
 container.sprites.Add(Sprite("tee_decoration_outline", set_tee_decoration, 1,0,1,1))
@@ -532,6 +539,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "gun")
 weapon.firedelay.Set(125)
+weapon.damage.Set(1)
 weapon.ammoregentime.Set(500)
 weapon.visual_size.Set(64)
 weapon.offsetx.Set(32)
@@ -543,6 +551,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "shotgun")
 weapon.firedelay.Set(500)
+weapon.damage.Set(1)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
@@ -553,6 +562,7 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "grenade")
 weapon.firedelay.Set(500) # TODO: fix this
+weapon.damage.Set(6)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
@@ -561,8 +571,8 @@ container.weapons.id.Add(weapon)
 
 weapon = WeaponSpec(container, "laser")
 weapon.firedelay.Set(800)
-weapon.visual_size.Set(92)
 weapon.damage.Set(5)
+weapon.visual_size.Set(92)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
 container.weapons.laser.base.Set(weapon)

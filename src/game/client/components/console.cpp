@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 
 #include <base/system.h>
 

@@ -4,8 +4,8 @@
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 #include <game/layers.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
@@ -453,10 +453,10 @@ void CHud::RenderVoting()
 	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
 	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
 	Base.y += Base.h+1;
-	UI()->DoLabel(&Base, aBuf, 6.0f, -1);
+	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
 
 	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
-	UI()->DoLabel(&Base, aBuf, 6.0f, 1);
+	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
 }
 
 void CHud::RenderCursor()
