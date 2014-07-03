@@ -393,8 +393,8 @@ void CMenus::RenderInGameServerBrowser(CUIRect MainView)
 		static int s_Button2 = 0;
 		if(DoButton_MenuTabTop(&s_Button2, Localize("Recent"), s_ControlPage == 2, &TabBar, 0, 0) && s_ControlPage != 2)
 		{
-		//todo: 
-        //recent server-list
+		ServerBrowser()->Refresh(IServerBrowser::TYPE_RECENT);
+		s_ControlPage = IServerBrowser::TYPE_RECENT;		
 		}
 
 	}

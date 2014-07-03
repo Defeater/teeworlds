@@ -58,6 +58,19 @@ CServerBrowser::CServerBrowser()
 
 	m_ServerlistType = 0;
 	m_BroadcastTime = 0;
+	
+	// load recent servers
+    char aFilePath[1024];
+    fs_storage_path("Teeworlds", aFilePath, sizeof(aFilePath));
+    str_append(aFilePath, "/recent.cfg", sizeof(aFilePath));
+    IOHANDLE RecentFile = io_open(aFilePath, IOFLAG_READ);
+    if (RecentFile)
+    {
+        io_read(RecentFile, m_aRecentServers, io_length(RecentFile));
+        m_NumRecentServers = io_length(RecentFile) / sizeof(NETADDR);
+        io_close(RecentFile);
+    }
+	
 }
 
 int CServerBrowser::AddFilter(int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress)
@@ -508,6 +521,19 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			QueueRequest(pEntry);
 		}
 	}*/
+	
+	else if(Type == IServerBrowser::SET_RECENT)
+	{
+		if(m_ServerlistType != IServerBrowser::TYPE_RECENT)
+			return;
+
+		if(!Find(Addr))
+		{
+			pEntry = Add(Addr);
+			QueueRequest(pEntry);
+		}
+	 }
+	
 	else if(Type == SET_TOKEN)
 	{
 		if(Token != m_CurrentToken)
@@ -588,6 +614,13 @@ void CServerBrowser::Refresh(int Type)
 			if(m_aFavoriteServers[i].m_State >= FAVSTATE_ADDR)
 				Set(m_aFavoriteServers[i].m_Addr, SET_FAV_ADD, -1, 0);
 	}*/
+	
+	else if(Type == IServerBrowser::TYPE_RECENT)
+	{
+		for(int i = 0; i < m_NumRecentServers; i++)
+			Set(m_aRecentServers[i], IServerBrowser::SET_RECENT, -1, 0);
+	}	
+	
 }
 
 void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const
@@ -877,6 +910,23 @@ void CServerBrowser::AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, 
 		if(pFilter->m_SortHash&FILTER_FAVORITE)
 			pFilter->Sort();
 	}
+}
+
+void CServerBrowser::AddRecent(const NETADDR &Addr)
+{
+    for (int i = MAX_RECENT - 1; i > 0; i--)
+        swap(m_aRecentServers[i], m_aRecentServers[i - 1]);
+    m_aRecentServers[0] = Addr;
+    if (m_NumRecentServers < MAX_RECENT)
+        m_NumRecentServers++;
+
+    //save recent to file
+    char aFilePath[1024];
+    fs_storage_path("Teeworlds", aFilePath, sizeof(aFilePath));
+    str_append(aFilePath, "/recent.cfg", sizeof(aFilePath));
+    IOHANDLE RecentFile = io_open(aFilePath, IOFLAG_WRITE);
+    io_write(RecentFile, m_aRecentServers, sizeof(NETADDR) * m_NumRecentServers);
+    io_close(RecentFile);
 }
 
 void CServerBrowser::RemoveFavoriteEx(const char *pHostname, const NETADDR *pAddr)

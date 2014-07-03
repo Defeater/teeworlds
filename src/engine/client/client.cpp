@@ -489,6 +489,7 @@ void CClient::OnEnterGame()
 	m_CurGameTick = 0;
 	m_PrevGameTick = 0;
 	m_CurMenuTick = 0;
+	m_ServerBrowser.AddRecent(m_ServerAddress); 
 }
 
 void CClient::EnterGame()

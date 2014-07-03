@@ -78,6 +78,7 @@ public:
 
 		TYPE_INTERNET = 0,
 		TYPE_LAN = 1,
+		TYPE_RECENT = 2,
 
 		FLAG_PASSWORD	=1,
 		FLAG_PURE		=2,
@@ -95,6 +96,8 @@ public:
 		FILTER_GAMETYPE_STRICT=16384,
 		FILTER_COUNTRY=32768,
 		FILTER_PING=65536,
+		
+		SET_RECENT,
 	};
 
 	virtual void Refresh(int Type) = 0;
@@ -113,6 +116,7 @@ public:
 	virtual bool IsFavorite(const NETADDR &Addr) = 0;	// todo: remove this
 	virtual void AddFavorite(const CServerInfo *pEntry) = 0;
 	virtual void RemoveFavorite(const CServerInfo *pEntry) = 0;
+	virtual void AddRecent(const NETADDR &Addr) = 0;
 
 	virtual int AddFilter(int Flag, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;
 	virtual void SetFilter(int Index, int SortHash, int Ping, int Country, const char* pGametype, const char* pServerAddress) = 0;

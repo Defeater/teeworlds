@@ -1719,6 +1719,8 @@ int CMenus::Render()
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
 		else
 			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		if (g_Config.m_UiBrowserPage == PAGE_RECENT)
+		    ServerBrowser()->Refresh(IServerBrowser::TYPE_RECENT);
 
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
@@ -1786,8 +1788,10 @@ int CMenus::Render()
 					RenderNews(MainView);
 				else if(m_MenuPage == PAGE_INTERNET)
 					RenderServerbrowser(MainView);
-				else if(m_MenuPage == PAGE_LAN)
+				else if(m_MenuPage == PAGE_LAN) 
 					RenderServerbrowser(MainView);
+				else if(m_MenuPage == PAGE_RECENT)
+				    RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_DEMOS)
 					RenderDemoList(MainView);
 				else if(m_MenuPage == PAGE_FRIENDS)

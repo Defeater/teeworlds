@@ -89,6 +89,7 @@ public:
 	bool IsFavorite(const NETADDR &Addr) { return FindFavoriteByAddr(Addr, 0) != 0; }
 	void AddFavorite(const CServerInfo *pEntry) { AddFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr, true); }
 	void RemoveFavorite(const CServerInfo *pEntry) { RemoveFavoriteEx(pEntry->m_aHostname, &pEntry->m_NetAddr); }
+    void AddRecent(const NETADDR &Addr);
 
 	//
 	void Update(bool ForceResort);
@@ -117,6 +118,7 @@ private:
 		FAVSTATE_HOST,
 
 		MAX_FAVORITES=256,
+		MAX_RECENT=256
 	};
 
 	struct CFavoriteServer
@@ -135,6 +137,9 @@ private:
 		int m_LookupCount;
 		bool m_Active;
 	} m_FavLookup;
+	
+	NETADDR m_aRecentServers[MAX_RECENT];
+	int m_NumRecentServers;
 
 	void UpdateFavorites();
 	CFavoriteServer *FindFavoriteByAddr(const NETADDR &Addr, int *Index);
