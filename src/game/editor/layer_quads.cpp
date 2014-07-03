@@ -6,7 +6,7 @@
 #include <engine/graphics.h>
 
 #include "editor.h"
-#include <generated/client_data.h>
+#include <game/generated/client_data.h>
 #include <game/client/localization.h>
 #include <game/client/render.h>
 

@@ -5,7 +5,7 @@
 
 #include <base/vmath.h>
 
-#include <generated/protocol.h>
+#include <game/generated/protocol.h>
 
 /*
 	Class: Game Controller
