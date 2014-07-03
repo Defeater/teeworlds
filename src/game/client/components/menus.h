@@ -481,6 +481,7 @@ class CMenus : public CComponent
 	static int PopupFilter(CMenus *pMenus, CUIRect View);
 
 	IGraphics::CTextureHandle m_TextureBlob;
+	IGraphics::CTextureHandle m_TextureLogo;
 
 	void ToggleMusic();
 public:

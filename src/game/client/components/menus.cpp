@@ -1254,10 +1254,9 @@ void CMenus::RenderMenubar(CUIRect r)
 
 void CMenus::RenderLoading()
 {
-	// TODO: not supported right now due to separate render thread
-
-	static int64 LastLoadRender = 0;
+    static int64 LastLoadRender = 0;
 	float Percent = m_LoadCurrent++/(float)m_LoadTotal;
+	float tw;
 
 	// make sure that we don't render for each little thing we load
 	// because that will slow down loading if we have vsync
@@ -1266,6 +1265,7 @@ void CMenus::RenderLoading()
 
 	LastLoadRender = time_get();
 
+	// need up date this here to get correct
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
@@ -1277,28 +1277,92 @@ void CMenus::RenderLoading()
 	float y = Screen.h/2-h/2;
 
 	Graphics()->BlendNormal();
-
-	Graphics()->TextureClear();
+    Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);;
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.50f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
+	RenderTools()->DrawRoundRect(0, y, Screen.w, h, 0.0f);
 	Graphics()->QuadsEnd();
 
+	char pCaption[25];
 
-	const char *pCaption = Localize("Loading");
+	char aLoading[20];
+	str_format(aLoading, sizeof(aLoading), Localize("Loading"));
+
+	if(m_LoadCurrent < 0.25 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s   ", aLoading);
+	else if(m_LoadCurrent > 0.25 * m_LoadTotal && m_LoadCurrent < 0.50 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s.  ", aLoading);
+	else if(m_LoadCurrent > 0.50 * m_LoadTotal && m_LoadCurrent < 0.75 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s.. ", aLoading);
+	else if(m_LoadCurrent > 0.75 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s...", aLoading);
+
+    float percent = (m_LoadCurrent*100.0f)/(float)m_LoadTotal;
 
 	CUIRect r;
 	r.x = x;
-	r.y = y+20;
+	r.y = y+10;
 	r.w = w;
 	r.h = h;
-	UI()->DoLabel(&r, pCaption, 48.0f, CUI::ALIGN_CENTER);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&r, pCaption, 48.0f, CUI::ALIGN_CENTER);
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Graphics()->TextureClear();
+	Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
 	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.15f,0.15f,0.15f,0.75f);
+	RenderTools()->DrawRoundRect(x+40, y+h-75, w-80, 30, 5.0f);
 	Graphics()->SetColor(1,1,1,0.75f);
-	RenderTools()->DrawRoundRect(x+40, y+h-75, (w-80)*Percent, 25, 5.0f);
+	RenderTools()->DrawRoundRect(x+45, y+h-70, (w-85)*Percent, 20, 5.0f);
 	Graphics()->QuadsEnd();
+
+    {
+        char aBuf[50];
+        str_format(aBuf, sizeof(aBuf), "%.2f%c", percent, '%');
+        float perLen = TextRender()->TextWidth(0, 16.0f, aBuf, str_length(aBuf));
+        r.x = x-perLen/2;
+        r.y = y+h-70;
+        r.w = w;
+        r.h = 20;
+        vec3 RgbBar = HslToRgb(vec3(((m_LoadCurrent * 0.35f) / m_LoadTotal), 1.0f, 0.5f));
+        TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+        UI()->DoLabelScaled(&r, aBuf, 16.0f, CUI::ALIGN_CENTER);
+    }
+    tw = TextRender()->TextWidth(0, 48.0f, pCaption, -1);
+
+	const char *pVersion = "v"GAME_VERSION;
+	const char *pDate = "Release date: "__DATE__;
+
+	tw = TextRender()->TextWidth(0, 14.0f, pDate, -1);
+	r.x = Screen.w - 15;
+	r.y = Screen.h - 20;
+	r.w = 0;//50;
+	r.h = 0;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&r, pDate, 14.0f, CUI::ALIGN_CENTER); // Align == 1 -> text align from the right
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	tw = TextRender()->TextWidth(0, 14.0f, pVersion, -1);
+	r.x = Screen.w - 15;
+	r.y = Screen.h - 20 - 20;
+	r.w = 0;
+	r.h = 0;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&r, pVersion, 14.0f, CUI::ALIGN_CENTER); // Align == 1 -> text align from the right
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        m_TextureLogo = Graphics()->LoadTexture("logo.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	    Graphics()->TextureSet(m_TextureLogo);
+	    Graphics()->QuadsBegin();
+		Graphics()->SetColor(1,1,1,0.3f);
+		IGraphics::CQuadItem QuadItem(Screen.x, y-200, 285.0, h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+
+        Graphics()->SetColor(1,1,1,1);
+        Graphics()->QuadsSetSubset(0, 0, Percent, 1);
+		QuadItem = IGraphics::CQuadItem(Screen.x, y-200, 285.0 * Percent, h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+	    Graphics()->QuadsEnd();
 
 	Graphics()->Swap();
 }
