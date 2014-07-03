@@ -25,6 +25,24 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	CUIRect Button;
 
+    TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static int s_BlaButton = 0;
+	if(g_Config.m_ClShowStartMenuImages)
+	{
+		if(DoButton_MenuImage(&s_BlaButton, Localize("Bla Settings"), 0, &Button, "bla", 10.0f, 0.5f))
+		{
+			m_MenuPage = PAGE_BLA;
+		}
+	}
+	else
+	{
+		if(DoButton_Menu(&s_BlaButton, Localize("Bla Settings"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
+		{
+			m_MenuPage = PAGE_BLA;
+		}
+	}
+
+    TopMenu.HSplitBottom(30.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static int s_SettingsButton = 0;
 	if(g_Config.m_ClShowStartMenuImages)
@@ -143,7 +161,7 @@ void CMenus::RenderLogo(CUIRect MainView)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
+	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 10, 280, 70);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }

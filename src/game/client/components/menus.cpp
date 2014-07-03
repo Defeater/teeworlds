@@ -1126,6 +1126,65 @@ void CMenus::RenderMenubar(CUIRect r)
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 		}
 	}
+    
+    else if(m_MenuPage == PAGE_BLA || m_GamePage == PAGE_BLA)
+	{
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		// render header background
+		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+		Box.HSplitBottom(25.0f, 0, &Box);
+
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_BlaGeneralButton=0;
+		if(DoButton_MenuTabTop(&s_BlaGeneralButton, Localize("General"), g_Config.m_UiSettingsPage==BLA_SETTINGS_GENERAL, &Button))
+		{
+			g_Config.m_UiSettingsPage = BLA_SETTINGS_GENERAL;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_GameskinsButton=0;
+		if(DoButton_MenuTabTop(&s_GameskinsButton, Localize("Extras"), g_Config.m_UiSettingsPage==BLA_SETTINGS_EXTRAS, &Button))
+		{
+			g_Config.m_UiSettingsPage = BLA_SETTINGS_EXTRAS;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_Placeholder1Button=0;
+		if(DoButton_MenuTabTop(&s_Placeholder1Button, Localize("Hud"), g_Config.m_UiSettingsPage==BLA_SETTINGS_HUD, &Button))
+		{
+        	g_Config.m_UiSettingsPage = BLA_SETTINGS_HUD;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_Placeholder2Button=0;
+		if(DoButton_MenuTabTop(&s_Placeholder2Button, Localize("Dummy"), g_Config.m_UiSettingsPage==BLA_SETTINGS_DUMMY, &Button))
+		{
+			g_Config.m_UiSettingsPage = BLA_SETTINGS_DUMMY;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_Placeholder3Button=0;
+		if(DoButton_MenuTabTop(&s_Placeholder3Button, Localize("Texture"), g_Config.m_UiSettingsPage==BLA_SETTINGS_TEXTURE, &Button))
+		{
+			g_Config.m_UiSettingsPage = BLA_SETTINGS_TEXTURE;
+		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth, &Button, &Box);
+		static int s_InfoButton=0;
+		if(DoButton_MenuTabTop(&s_InfoButton, Localize("Info"), g_Config.m_UiSettingsPage==BLA_SETTINGS_INFO, &Button))
+		{
+			g_Config.m_UiSettingsPage = BLA_SETTINGS_INFO;
+		}
+	}
+	
 	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// render menu tabs
@@ -1198,47 +1257,39 @@ void CMenus::RenderMenubar(CUIRect r)
 	}
 	else
 	{
-		float Spacing = 3.0f;
-		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
-
-		// render header backgrounds
-		CUIRect Left, Right;
-		Box.VSplitLeft(ButtonWidth*4.0f+Spacing*3.0f, &Left, 0);
-		Box.VSplitRight(ButtonWidth, 0, &Right);
-		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-
-		Left.HSplitBottom(25.0f, 0, &Left);
-		Right.HSplitBottom(25.0f, 0, &Right);
-
+		 Box.HSplitBottom(25.0f, 0, &Box);
+		 
 		// online menus
-		if(m_GamePage != PAGE_SETTINGS) // Game stuff
+		if(m_GamePage != PAGE_SETTINGS && m_GamePage != PAGE_BLA) // Game stuff
 		{
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
+			Box.VSplitLeft(90.0f, &Button, &Box);
 			static int s_GameButton=0;
-			if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button))
+			if(DoButton_MenuTab(&s_GameButton, Localize("Game"), m_ActivePage==PAGE_GAME, &Button, CUI::CORNER_TL|CUI::CORNER_IBL))
 				NewPage = PAGE_GAME;
-
-			Left.VSplitLeft(Spacing, 0, &Left); // little space
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
+				
+			Box.VSplitLeft(90.0f, &Button, &Box);		     
 			static int s_PlayersButton=0;
-			if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button))
+			if(DoButton_MenuTab(&s_PlayersButton, Localize("Players"), m_ActivePage==PAGE_PLAYERS, &Button, 0))
 				NewPage = PAGE_PLAYERS;
 
-			Left.VSplitLeft(Spacing, 0, &Left); // little space
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
+			Box.VSplitLeft(130.0f, &Button, &Box);
 			static int s_ServerInfoButton=0;
-			if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button))
+			if(DoButton_MenuTab(&s_ServerInfoButton, Localize("Server info"), m_ActivePage==PAGE_SERVER_INFO, &Button, 0))
 				NewPage = PAGE_SERVER_INFO;
 
-			Left.VSplitLeft(Spacing, 0, &Left); // little space
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
+			Box.VSplitLeft(130.0f, &Button, &Box);
 			static int s_CallVoteButton=0;
-			if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button))
+			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
 				NewPage = PAGE_CALLVOTE;
 
+            Box.VSplitRight(90.0f, &Box, &Button);
+			static int s_BlaButton=0;
+			if(DoButton_MenuTab(&s_BlaButton, Localize("Bla"), 0, &Button, CUI::CORNER_TR|CUI::CORNER_IBR))
+				NewPage = PAGE_BLA;
+
+            Box.VSplitRight(130.0f, &Box, &Button);
 			static int s_SettingsButton=0;
-			if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), 0, &Right))
+			if(DoButton_MenuTab(&s_SettingsButton, Localize("Settings"), 0, &Button, CUI::CORNER_TL))
 				NewPage = PAGE_SETTINGS;
 		}
 	}
@@ -1719,6 +1770,8 @@ int CMenus::Render()
 					RenderServerControl(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
 					RenderSettings(MainView);
+				else if(m_GamePage == PAGE_BLA)
+					RenderBla(MainView);
 			}
 			else
 			{
