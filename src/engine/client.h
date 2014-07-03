@@ -79,6 +79,7 @@ public:
 	// actions
 	virtual void Connect(const char *pAddress) = 0;
 	virtual void Disconnect() = 0;
+	virtual void SendInitialRconPassword(const char* aPassword) = 0;
 	virtual void Quit() = 0;
 	virtual const char *DemoPlayer_Play(const char *pFilename, int StorageType) = 0;
 	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
@@ -142,6 +143,9 @@ public:
 	virtual bool ConnectionProblems() = 0;
 
 	virtual bool SoundInitFailed() = 0;
+	
+	virtual const char* GetCurrentMap() = 0;
+	virtual int GetCurrentMapCrc() = 0;
 
 	virtual IGraphics::CTextureHandle GetDebugFont() = 0; // TODO: remove this function
 };
@@ -175,4 +179,5 @@ public:
 };
 
 extern IGameClient *CreateGameClient();
+const char *ClientUserDirectory();
 #endif

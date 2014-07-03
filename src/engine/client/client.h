@@ -101,6 +101,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_CurrentRecvTick;
 	int m_RconAuthed;
 	int m_UseTempRconCommands;
+	
+	char m_aServerRconPassword[128];
 
 	// version-checking
 	char m_aVersionStr[10];
@@ -294,6 +296,10 @@ public:
 	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
+    virtual void SendInitialRconPassword(const char *m_aRconPassword) { str_copy(m_aServerRconPassword, m_aRconPassword, sizeof(m_aServerRconPassword)); }
+    virtual const char* GetCurrentMap();
+    virtual int GetCurrentMapCrc();
+    
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
