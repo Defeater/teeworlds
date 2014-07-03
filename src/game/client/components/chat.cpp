@@ -10,6 +10,7 @@
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
+#include <game/client/animstate.h>
 #include <game/client/gameclient.h>
 #include <game/client/localization.h>
 
@@ -529,7 +530,7 @@ void CChat::OnRender()
 		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
 
 		// reset the cursor
-		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, Begin+4, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
@@ -547,6 +548,14 @@ void CChat::OnRender()
 			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
 
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+		
+		 if (m_aLines[r].m_ClientID != -1)
+        {
+            CGameClient::CClientData *pClientData = &m_pClient->m_aClients[m_aLines[r].m_ClientID];
+            CTeeRenderInfo RenderInfo = pClientData->m_RenderInfo;
+            RenderInfo.m_Size = 8.0f;
+            RenderTools()->RenderTee(CAnimState::GetIdle(), &RenderInfo, 0, vec2(1.0f, 0.0f), vec2(Begin, y+FontSize-1.5f));
+        }
 
 		// render line
 		if(m_aLines[r].m_ClientID == -1)
