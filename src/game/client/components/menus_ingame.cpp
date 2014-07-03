@@ -132,7 +132,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	// Record button
 	ButtonBar.VSplitRight(100.0f, &ButtonBar, 0);
-	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+	ButtonBar.VSplitRight(150.0f, &ButtonBar, &Button);
 
     static int s_TestButton = 0;
 	if(DoButton_MenuTabTop(&s_TestButton, Localize("LAN Test"), 0, &Button))
@@ -360,6 +360,46 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, Motd.x+x, Motd.y+y, 32, Localize("MOTD"), -1);
 	y += 32.0f+5.0f;
 	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, (int)Motd.w);
+}
+
+void CMenus::RenderInGameServerBrowser(CUIRect MainView)
+{
+	static int s_ControlPage = 0;
+
+	// render background
+	CUIRect Bottom, TabBar, Button;
+	MainView.HSplitTop(20.0f, &Bottom, &MainView);
+	RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
+	MainView.HSplitTop(20.0f, &TabBar, &MainView);
+
+	// tab bar
+	{
+		TabBar.VSplitLeft(TabBar.w/3, &Button, &TabBar);
+		static int s_Button0 = 0;
+		if(DoButton_MenuTabTop(&s_Button0, Localize("Global"), s_ControlPage == 0, &Button, 0, 0) && s_ControlPage != 0)
+		{
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+			s_ControlPage = IServerBrowser::TYPE_INTERNET;
+		}
+
+		TabBar.VSplitMid(&Button, &TabBar);
+		static int s_Button1 = 0;
+		if(DoButton_MenuTabTop(&s_Button1, Localize("Local"), s_ControlPage == 1, &Button, 0, 0) && s_ControlPage != 1)
+		{
+			ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+			s_ControlPage = IServerBrowser::TYPE_LAN;
+		}
+		
+		static int s_Button2 = 0;
+		if(DoButton_MenuTabTop(&s_Button2, Localize("Recent"), s_ControlPage == 2, &TabBar, 0, 0) && s_ControlPage != 2)
+		{
+		//todo: 
+        //recent server-list
+		}
+
+	}
+
+	RenderServerbrowser(MainView);
 }
 
 void CMenus::RenderServerControlServer(CUIRect MainView)

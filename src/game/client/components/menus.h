@@ -130,6 +130,7 @@ class CMenus : public CComponent
 		PAGE_PLAYERS,
 		PAGE_SERVER_INFO,
 		PAGE_CALLVOTE,
+		PAGE_INGAME_BROWSER,
 		PAGE_INTERNET,
 		PAGE_LAN,
 		PAGE_FRIENDS,
@@ -453,6 +454,7 @@ class CMenus : public CComponent
 	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
 	void RenderServerControlServer(CUIRect MainView);
     void TestMap();
+    void RenderInGameServerBrowser(CUIRect MainView);
 
 	// found in menus_browser.cpp
 	int m_ScrollOffset;

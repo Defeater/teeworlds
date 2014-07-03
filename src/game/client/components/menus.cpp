@@ -1279,8 +1279,13 @@ void CMenus::RenderMenubar(CUIRect r)
 
 			Box.VSplitLeft(130.0f, &Button, &Box);
 			static int s_CallVoteButton=0;
-			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, 0))
 				NewPage = PAGE_CALLVOTE;
+				
+		    Box.VSplitLeft(90.0f, &Button, &Box);
+			static int s_BrowserButton=0;
+			if(DoButton_MenuTab(&s_BrowserButton, Localize("Browser"), m_ActivePage==PAGE_INGAME_BROWSER, &Button, CUI::CORNER_TR))
+				NewPage = PAGE_INGAME_BROWSER;
 
             Box.VSplitRight(90.0f, &Box, &Button);
 			static int s_BlaButton=0;
@@ -1746,7 +1751,7 @@ int CMenus::Render()
 		else
 		{
 			// do tab bar
-			Screen.VMargin(Screen.w/2-365.0f, &MainView);
+			Screen.VMargin(Screen.w/2-400.0f, &MainView);
 			MainView.HSplitTop(60.0f, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
@@ -1768,6 +1773,8 @@ int CMenus::Render()
 					RenderServerInfo(MainView);
 				else if(m_GamePage == PAGE_CALLVOTE)
 					RenderServerControl(MainView);
+				else if(m_GamePage == PAGE_INGAME_BROWSER)
+				    RenderInGameServerBrowser(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
 					RenderSettings(MainView);
 				else if(m_GamePage == PAGE_BLA)
