@@ -1798,6 +1798,8 @@ int CMenus::Render()
 					RenderServerbrowser(MainView);
 				else if(m_MenuPage == PAGE_SETTINGS)
 					RenderSettings(MainView);
+				else if(m_MenuPage == PAGE_BLA)
+					RenderBla(MainView);
 			}
 		}
 

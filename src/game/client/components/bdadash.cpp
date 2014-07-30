@@ -46,7 +46,7 @@ bool CBdadash::SearchType(int Type)
 
 void CBdadash::Create(vec2 Pos, int Type)
 {	
-	if(g_Config.m_Bdadash)
+	if(!g_Config.m_Bdadash)
 	return;
     
     CItem *i = CreateI();
