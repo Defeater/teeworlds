@@ -124,12 +124,12 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	if(g_Config.m_ClShowStartMenuImages)
 	{
 		if(DoButton_MenuImage(&s_PlayButton, Localize("Play"), 0, &Button, "play_game", 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_MenuPage = PAGE_INTERNET;      
 	}
 	else
 	{
 		if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, CUI::CORNER_ALL, 10.0f, 0.5f))
-			m_MenuPage = g_Config.m_UiBrowserPage;
+			m_MenuPage = PAGE_INTERNET;
 	}
 
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
