@@ -118,6 +118,9 @@ MACRO_CONFIG_INT(YPos, cl_radar_y_pos, 80, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "R
 MACRO_CONFIG_INT(ClRadar, cl_enable_radar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Radar on / off")
 MACRO_CONFIG_INT(UseXY, cl_radar_use_xy, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use radar y/x axis")
 
+MACRO_CONFIG_INT(Texture, texture_page, 4, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Texture page")
+
+
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
 MACRO_CONFIG_STR(GameTexture, game_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Gameskin texture")
