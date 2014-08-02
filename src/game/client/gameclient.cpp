@@ -51,6 +51,11 @@
 #include "components/spectator.h"
 #include "components/voting.h"
 
+#include "components/gskins.h"
+#include "components/pskins.h"
+#include "components/eskins.h"
+#include "components/cskins.h"
+
 // instanciate all systems
 static CKillMessages gs_KillMessages;
 static CCamera gs_Camera;
@@ -83,6 +88,11 @@ static CMapImages gs_MapImages;
 
 static CMapLayers gs_MapLayersBackGround(CMapLayers::TYPE_BACKGROUND);
 static CMapLayers gs_MapLayersForeGround(CMapLayers::TYPE_FOREGROUND);
+
+static CgSkins gs_gSkins;
+static CpSkins gs_pSkins;
+static CeSkins gs_eSkins;
+static CcSkins gs_cSkins;
 
 CGameClient::CStack::CStack() { m_Num = 0; }
 void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_Num++] = pComponent; }
@@ -179,6 +189,11 @@ void CGameClient::OnConsoleInit()
 	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
 	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
 
+    m_pgSkins = &::gs_gSkins;
+	m_ppSkins = &::gs_pSkins;
+	m_peSkins = &::gs_eSkins;
+	m_pcSkins = &::gs_cSkins;
+
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
 	m_All.Add(m_pCountryFlags);
@@ -212,6 +227,11 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pMotd);
 	m_All.Add(m_pMenus);
 	m_All.Add(m_pGameConsole);
+
+    m_All.Add(m_pgSkins);
+	m_All.Add(m_ppSkins);
+	m_All.Add(m_peSkins);
+	m_All.Add(m_pcSkins);
 
 	// build the input stack
 	m_Input.Add(&m_pMenus->m_Binder); // this will take over all input when we want to bind a key
@@ -300,6 +320,11 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 
 	m_ServerMode = SERVERMODE_PURE;
+	
+	g_pData->m_aImages[IMAGE_GAME].m_Id = m_pgSkins->Get(m_pgSkins->Find(g_Config.m_GameTexture))->m_Texture;
+	g_pData->m_aImages[IMAGE_PARTICLES].m_Id = m_ppSkins->Get(m_ppSkins->Find(g_Config.m_GameParticles))->m_Texture;
+	g_pData->m_aImages[IMAGE_EMOTICONS].m_Id = m_peSkins->Get(m_peSkins->Find(g_Config.m_GameEmoticons))->m_Texture;
+	g_pData->m_aImages[IMAGE_CURSOR].m_Id = m_pcSkins->Get(m_pcSkins->Find(g_Config.m_GameCursor))->m_Texture;
 }
 
 void CGameClient::DispatchInput()

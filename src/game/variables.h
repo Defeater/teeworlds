@@ -120,6 +120,11 @@ MACRO_CONFIG_INT(UseXY, cl_radar_use_xy, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "
 
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
+MACRO_CONFIG_STR(GameTexture, game_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Gameskin texture")
+MACRO_CONFIG_STR(GameParticles, particle_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Particle texture")
+MACRO_CONFIG_STR(GameEmoticons, emoticons_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Emoticons texture")
+MACRO_CONFIG_STR(GameCursor, cursor_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Cursor texture")
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")

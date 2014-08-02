@@ -279,6 +279,11 @@ public:
 	class CItems *m_pItems;
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
+	
+	class CgSkins *m_pgSkins;
+	class CpSkins *m_ppSkins;
+	class CeSkins *m_peSkins;
+	class CcSkins *m_pcSkins;
 };
 
 
