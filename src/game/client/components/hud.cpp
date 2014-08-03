@@ -565,10 +565,6 @@ void CHud::OnRender()
 	if(!m_pClient->m_Snap.m_pGameData)
 		return;
 
-	// dont render hud if the menu is active
-	if(m_pClient->m_pMenus->IsActive())
-		return;
-
 	m_Width = 300.0f*Graphics()->ScreenAspect();
 	m_Height = 300.0f;
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
