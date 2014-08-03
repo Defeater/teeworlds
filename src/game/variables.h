@@ -118,15 +118,18 @@ MACRO_CONFIG_INT(YPos, cl_radar_y_pos, 80, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "R
 MACRO_CONFIG_INT(ClRadar, cl_enable_radar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Radar on / off")
 MACRO_CONFIG_INT(UseXY, cl_radar_use_xy, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Use radar y/x axis")
 
+// texture stuff
 MACRO_CONFIG_INT(Texture, texture_page, 4, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Texture page")
-
-
-MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
-
 MACRO_CONFIG_STR(GameTexture, game_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Gameskin texture")
 MACRO_CONFIG_STR(GameParticles, particle_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Particle texture")
 MACRO_CONFIG_STR(GameEmoticons, emoticons_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Emoticons texture")
 MACRO_CONFIG_STR(GameCursor, cursor_texture, 24, "default", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Cursor texture")
+
+// chat stuff
+MACRO_CONFIG_INT(ClTextColors, cl_text_colors, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Render text colors") 
+
+// other stuff
+MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
