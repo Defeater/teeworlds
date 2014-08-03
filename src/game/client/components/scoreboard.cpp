@@ -275,6 +275,32 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				TeeInfo.m_Size *= TeeSizeMod;
 				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeOffset+TeeLength/2, y+LineHeight/2));
 			}
+			
+		// render if player is admin
+		if(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_ADMIN)
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_ADMINICON].m_Id);
+			Graphics()->QuadsBegin();
+			RenderTools()->SelectSprite(SPRITE_ADMINICON);
+			{
+				if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 12)
+				{
+					IGraphics::CQuadItem QuadItem(x+92+15, y-2, 8, 8);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+				}
+				if(m_pClient->m_GameInfo.m_aTeamSize[Team] > 8)
+				{
+					IGraphics::CQuadItem QuadItem(x+95+15, y-2, 8, 8);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+				}
+				else
+				{
+					IGraphics::CQuadItem QuadItem(x+98+15, y-2, 8, 8);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+				}
+			}
+			Graphics()->QuadsEnd();
+		}
 
 			// name
 			// todo: improve visual player ready state
