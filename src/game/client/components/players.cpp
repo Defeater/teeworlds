@@ -548,6 +548,41 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
+	
+	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClHealthBar)
+	{
+
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
+		RenderTools()->DrawRoundRect(Position.x-35, Position.y-54, 70, 7, 3.5f); // health background
+		RenderTools()->DrawRoundRect(Position.x-35, Position.y-44, 70, 7, 3.5f); // armor background
+
+		if(m_pClient->m_Snap.m_pLocalCharacter->m_Health > 0 && m_pClient->m_Snap.m_pLocalCharacter->m_Health < 11)
+		{
+			if(m_pClient->m_Snap.m_pLocalCharacter->m_Health > 7)
+				Graphics()->SetColor(0, 1, 0, 0.5f);
+			else if(m_pClient->m_Snap.m_pLocalCharacter->m_Health < 8 && m_pClient->m_Snap.m_pLocalCharacter->m_Health > 5)
+				Graphics()->SetColor(0.4f, 1, 0, 0.5f);
+			else if(m_pClient->m_Snap.m_pLocalCharacter->m_Health < 6 && m_pClient->m_Snap.m_pLocalCharacter->m_Health > 3)
+				Graphics()->SetColor(1, 0.4f, 0, 0.5f);
+			else if(m_pClient->m_Snap.m_pLocalCharacter->m_Health < 4)
+				Graphics()->SetColor(1,0,0,0.75f);
+
+			RenderTools()->DrawRoundRect(Position.x-35, Position.y-54, m_pClient->m_Snap.m_pLocalCharacter->m_Health*7, 7, 3.5f);
+		}
+
+		if(m_pClient->m_Snap.m_pLocalCharacter->m_Armor > 0 && m_pClient->m_Snap.m_pLocalCharacter->m_Armor < 11)
+		{
+			Graphics()->SetColor(1,1,0,0.6f);
+
+			RenderTools()->DrawRoundRect(Position.x-35, Position.y-44, m_pClient->m_Snap.m_pLocalCharacter->m_Armor*7, 7, 3.5f);
+		}
+
+		Graphics()->QuadsEnd();
+	}
+	
 }
 
 void CPlayers::OnRender()

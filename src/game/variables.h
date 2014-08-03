@@ -130,6 +130,7 @@ MACRO_CONFIG_INT(ClTextColors, cl_text_colors, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_S
 
 // other stuff
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
+MACRO_CONFIG_INT(ClHealthBar, cl_health_bar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Health & ammobar over tee") 
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
