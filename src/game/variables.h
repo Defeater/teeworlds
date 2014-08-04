@@ -132,6 +132,7 @@ MACRO_CONFIG_INT(ClChatFeatures, cl_chat_features, 1, 0, 1, CFGFLAG_CLIENT|CFGFL
 // other stuff
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 MACRO_CONFIG_INT(ClHealthBar, cl_health_bar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Health & ammobar over tee") 
+MACRO_CONFIG_INT(ClShowQuads, cl_show_quads, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show quads")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

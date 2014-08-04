@@ -769,7 +769,7 @@ const char *CClient::ErrorString()
 
 void CClient::Render()
 {
-	if(g_Config.m_GfxClear)
+	if(g_Config.m_GfxClear || !g_Config.m_ClShowQuads)
 		Graphics()->Clear(1,1,0);
 
 	GameClient()->OnRender();
