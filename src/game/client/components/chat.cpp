@@ -441,7 +441,15 @@ void CChat::OnRender()
 	float Width = 300.0f*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
 	float x = 5.0f;
-	float y = 300.0f-20.0f;
+	float y = 300.0f-25.0f;
+	bool TeamPlay = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS;
+	
+	float LineWidth;
+	if(m_pClient->m_pScoreboard->Active() && TeamPlay)
+		LineWidth = 90.0f;
+	else
+		LineWidth = 180.0f;
+	
 	if(m_Mode != MODE_NONE)
 	{
 		// render chat input
@@ -449,6 +457,15 @@ void CChat::OnRender()
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
+
+        if(g_Config.m_ClChatFeatures)
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(0, 0, 0, 0.5f);
+			RenderTools()->DrawRoundRectExt(x-2, y, LineWidth+10.0f, 20, 3.0f, CUI::CORNER_B);
+			Graphics()->QuadsEnd();
+		}
 
 		if(m_Mode == MODE_ALL)
 			TextRender()->TextEx(&Cursor, Localize("All"), -1);
@@ -496,13 +513,35 @@ void CChat::OnRender()
 	y -= 8.0f;
 
 	int64 Now = time_get();
-	float LineWidth = m_pClient->m_pScoreboard->Active() ? 90.0f : 200.0f;
-	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 230.0f : m_Show ? 50.0f : 200.0f;
 	float Begin = x;
 	float FontSize = 6.0f;
 	CTextCursor Cursor;
 	int OffsetType = m_pClient->m_pScoreboard->Active() ? 1 : 0;
-	for(int i = 0; i < MAX_LINES; i++)
+	
+	float Limit = 310.0f - 80;
+	float HeightLimit = (m_pClient->m_pScoreboard->Active()) ? 238.0f : m_Show ? g_Config.m_ClChatFeatures ? 310.0f - 184.0f : 50 : Limit;
+
+	if(g_Config.m_ClChatFeatures)
+	{
+		if(m_HeightLimit < HeightLimit)
+			m_HeightLimit += 1.0f;
+		else if(m_HeightLimit > HeightLimit+10.0f)
+			m_HeightLimit -= 1.0f;
+	}
+	else
+		m_HeightLimit = HeightLimit;
+
+	if(g_Config.m_ClChatFeatures && m_Mode != MODE_NONE)
+	{
+		m_Show = true;
+		Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(0, 0, 0, 0.25f);
+		RenderTools()->DrawRoundRectExt(x-2, y-275.0f+m_HeightLimit, LineWidth+10.0f, 275.0f-m_HeightLimit+8.0f, 3.0f, CUI::CORNER_T);
+		Graphics()->QuadsEnd();
+	}
+
+    for(int i = 0; i < MAX_LINES; i++)	
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
@@ -517,7 +556,18 @@ void CChat::OnRender()
 			TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 			m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
 		}
-		y -= m_aLines[r].m_YOffset[OffsetType];
+		
+		if(g_Config.m_ClChatFeatures)
+		{
+			if(m_aLines[r].m_YOffsetSec < m_aLines[r].m_YOffset[OffsetType])
+				m_aLines[r].m_YOffsetSec += 5/50.0f;
+			else if(m_aLines[r].m_YOffsetSec > m_aLines[r].m_YOffset[OffsetType] + 0.5f)
+				m_aLines[r].m_YOffsetSec -= 5/50.0f;
+		}
+		else
+			m_aLines[r].m_YOffsetSec = m_aLines[r].m_YOffset[OffsetType];
+
+		y -= m_aLines[r].m_YOffsetSec;
 
 		// cut off if msgs waste too much space
 		if(y < HeightLimit)

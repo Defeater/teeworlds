@@ -127,6 +127,7 @@ MACRO_CONFIG_STR(GameCursor, cursor_texture, 24, "default", CFGFLAG_CLIENT|CFGFL
 
 // chat stuff
 MACRO_CONFIG_INT(ClTextColors, cl_text_colors, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Render text colors") 
+MACRO_CONFIG_INT(ClChatFeatures, cl_chat_features, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Eye candy chat features")
 
 // other stuff
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")

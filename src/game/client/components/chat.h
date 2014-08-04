@@ -19,6 +19,7 @@ class CChat : public CComponent
 	{
 		int64 m_Time;
 		float m_YOffset[2];
+		float m_YOffsetSec;
 		int m_ClientID;
 		int m_Team;
 		int m_NameColor;
@@ -52,6 +53,7 @@ class CChat : public CComponent
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
+	float m_HeightLimit;
 
 	struct CHistoryEntry
 	{
