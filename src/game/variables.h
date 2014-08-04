@@ -133,6 +133,7 @@ MACRO_CONFIG_INT(ClChatFeatures, cl_chat_features, 1, 0, 1, CFGFLAG_CLIENT|CFGFL
 MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 MACRO_CONFIG_INT(ClHealthBar, cl_health_bar, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Health & ammobar over tee") 
 MACRO_CONFIG_INT(ClShowQuads, cl_show_quads, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show quads")
+MACRO_CONFIG_STR(ClUpdateServer, cl_update_server, 100, "def.pf-control.de/bla/", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Server to use to update new versions")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

@@ -19,6 +19,7 @@
 #include <engine/map.h>
 #include <engine/masterserver.h>
 #include <engine/serverbrowser.h>
+#include <engine/autoupdate.h>
 #include <engine/sound.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -42,6 +43,7 @@
 
 #include "friends.h"
 #include "serverbrowser.h"
+#include "autoupdate.h"
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1691,7 +1693,8 @@ void CClient::RegisterInterfaces()
 	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
-	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
+	Kernel()->RegisterInterface(static_cast<IAutoUpdate*>(&m_AutoUpdate));
+    Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
 }
 
 void CClient::InitInterfaces()
@@ -1705,7 +1708,8 @@ void CClient::InitInterfaces()
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
-	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pAutoUpdate = Kernel()->RequestInterface<IAutoUpdate>();
+    m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
@@ -2360,6 +2364,8 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// write down the config and quit
 	pConfig->Save();
+	
+	pClient->AutoUpdate()->ExecuteExit();
 
 	// free components
 	mem_free(pClient);

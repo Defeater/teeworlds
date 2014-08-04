@@ -8,7 +8,7 @@
 
 #include <engine/graphics.h>
 #include <engine/demo.h>
-#include <engine/friends.h>
+#include <engine/friends.h>  
 
 #include <game/voting.h>
 #include <game/client/component.h>
@@ -102,26 +102,6 @@ class CMenus : public CComponent
 
 	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
 	//static void demolist_list_callback(const CUIRect *rect, int index, void *user);
-
-	enum
-	{
-		POPUP_NONE=0,
-		POPUP_FIRST_LAUNCH,
-		POPUP_CONNECTING,
-		POPUP_MESSAGE,
-		POPUP_DISCONNECTED,
-		POPUP_PURE,
-		POPUP_LANGUAGE,
-		POPUP_COUNTRY,
-		POPUP_DELETE_DEMO,
-		POPUP_RENAME_DEMO,
-		POPUP_REMOVE_FRIEND,
-		POPUP_SAVE_SKIN,
-		POPUP_DELETE_SKIN,
-		POPUP_SOUNDERROR,
-		POPUP_PASSWORD,
-		POPUP_QUIT,
-	};
 
 	enum
 	{
@@ -262,9 +242,9 @@ class CMenus : public CComponent
 	int m_DemolistStorageType;
 
 	void DemolistOnUpdate(bool Reset);
-	void DemolistPopulate();
+	void DemolistPopulate();   
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
-
+     
 	// friends
 	struct CFriendItem
 	{
@@ -290,7 +270,7 @@ class CMenus : public CComponent
 
 	sorted_array<CFriendItem> m_lFriends;
 	int m_FriendlistSelectedIndex;
-
+    
 	void FriendlistOnUpdate();
 
 	class CBrowserFilter
@@ -322,7 +302,7 @@ class CMenus : public CComponent
 		const char* Name() const;
 
 		void SetFilterNum(int Num);
-
+       
 		int NumSortedServers() const;
 		int NumPlayers() const;
 		const CServerInfo *SortedGet(int Index) const;
@@ -419,7 +399,7 @@ class CMenus : public CComponent
 	int m_CurrentVideoFormat;
 	void UpdateVideoFormats();
 	void UpdatedFilteredVideoModes();
-
+    
 	// found in menus.cpp
 	int Render();
 	//void render_background();
@@ -508,7 +488,31 @@ class CMenus : public CComponent
 
 	void ToggleMusic();
 public:
-	void RenderBackground();
+	
+	void setPopup(int Popup) { m_Popup = Popup; }
+	
+	enum
+	{
+        POPUP_NONE=0,
+		POPUP_FIRST_LAUNCH,
+		POPUP_CONNECTING,
+		POPUP_MESSAGE,
+		POPUP_DISCONNECTED,
+		POPUP_PURE,
+		POPUP_LANGUAGE,
+		POPUP_COUNTRY,
+		POPUP_DELETE_DEMO,
+		POPUP_RENAME_DEMO,
+		POPUP_REMOVE_FRIEND,
+		POPUP_SAVE_SKIN,
+		POPUP_DELETE_SKIN,
+		POPUP_SOUNDERROR,
+		POPUP_PASSWORD,
+		POPUP_QUIT,
+		POPUP_AUTOUPDATE
+	};
+    
+    void RenderBackground();  
 
 	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }
 
@@ -517,6 +521,7 @@ public:
 	CMenus();
 
 	void RenderLoading();
+	void RenderUpdating(const char *pCaption, int current=0, int total=0);
 
 	bool IsActive() const { return m_MenuActive; }
 

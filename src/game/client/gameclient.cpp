@@ -10,6 +10,7 @@
 #include <engine/storage.h>
 #include <engine/sound.h>
 #include <engine/serverbrowser.h>
+#include <engine/autoupdate.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 
@@ -162,6 +163,7 @@ void CGameClient::OnConsoleInit()
 	m_pDemoPlayer = Kernel()->RequestInterface<IDemoPlayer>();
 	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
+	m_pAutoUpdate = Kernel()->RequestInterface<IAutoUpdate>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 
@@ -305,6 +307,17 @@ void CGameClient::OnInit()
 	for(int i = m_All.m_Num-1; i >= 0; --i)
 		m_All.m_paComponents[i]->OnInit();
 
+    // auto update
+    #if !defined(CONF_PLATFORM_MACOSX)
+	char aBuf[256];
+	if (g_Config.m_AutoUpdate)
+	{
+        str_format(aBuf, sizeof(aBuf), "Checking updates, please wait....");
+		m_pMenus->RenderUpdating(aBuf);
+		AutoUpdate()->CheckUpdates(m_pMenus);
+	}
+	#endif
+
 	// setup load amount// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
@@ -315,7 +328,6 @@ void CGameClient::OnInit()
 	OnReset();
 
 	int64 End = time_get();
-	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End-Start)*1000)/(float)time_freq());
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 
