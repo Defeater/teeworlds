@@ -235,11 +235,11 @@ void CAutoUpdate::DoUpdates(CMenus *pMenus)
 							m_NeedUpdateServer = true;
 							dbg_msg("autoupdate", "Updating server");
 							#if defined(CONF_FAMILY_WINDOWS)
-							if (!GetFile("teeworlds-Server.exe", "teeworlds-Server.exe"))
+							if (!GetFile("teeworlds_srv.exe", "teeworlds_srv.exe"))
 							#elif defined(CONF_ARCH_AMD64)
-							if (!GetFile("teeworlds-Server64", "teeworlds-Server"))
+							if (!GetFile("teeworlds_srv64", "teeworlds_srv"))
 							#else
-							if (!GetFile("teeworlds-Server", "teeworlds-Server"))
+							if (!GetFile("teeworlds_srv", "teeworlds_srv"))
 							#endif
 								dbg_msg("autoupdate", "Error downloading new version");
 						}
