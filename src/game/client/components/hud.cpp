@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <stdio.h>
+
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -417,46 +419,150 @@ void CHud::RenderTeambalanceWarning()
 
 void CHud::RenderVoting()
 {
-	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+    if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
 		return;
+	}
 
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.40f);
-	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 46, 5.0f);
-	Graphics()->QuadsEnd();
+    char aClientName[32] = {0}, aMap[64] = {0};
+    int offSetPreview = 0;
+    bool found = false;
+    float offSetX = m_pClient->m_pVoting->m_offSetX;
 
-	TextRender()->TextColor(1,1,1,1);
+    //Search Vote Kick or Move
+    sscanf(m_pClient->m_pVoting->VoteDescription(), "Kick '%[^']s'", aClientName);
+    if (aClientName[0] == 0)
+        sscanf(m_pClient->m_pVoting->VoteDescription(), "move '%[^']s'", aClientName);
+    if (aClientName[0] == 0)
+        sscanf(m_pClient->m_pVoting->VoteDescription(), "Spec '%[^']s'", aClientName);
+    if (aClientName[0] == 0)
+        sscanf(m_pClient->m_pVoting->VoteDescription(), "spec '%[^']s'", aClientName);
+    if (aClientName[0] == 0)
+        sscanf(m_pClient->m_pVoting->VoteDescription(), "Pause '%[^']s'", aClientName);
 
-	CTextCursor Cursor;
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
-	float tw = TextRender()->TextWidth(0x0, 6, aBuf, -1);
-	TextRender()->SetCursor(&Cursor, 5.0f+100.0f-tw, 60.0f, 6.0f, TEXTFLAG_RENDER);
-	TextRender()->TextEx(&Cursor, aBuf, -1);
+    if (aClientName[0] != 0 && m_pClient->m_pVoting->GetState() == CVoting::STATE_NORMAL)
+    {
+        offSetPreview = 45;
 
-	TextRender()->SetCursor(&Cursor, 5.0f, 60.0f, 6.0f, TEXTFLAG_RENDER);
-	Cursor.m_LineWidth = 100.0f-tw;
-	Cursor.m_MaxLines = 3;
-	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
+        for (int i=0; i<MAX_CLIENTS; i++)
+        {
+            if (str_comp(m_pClient->m_aClients[i].m_aName, aClientName) == 0)
+            {
+                // draw tee of the flag holder
+                CTeeRenderInfo Info = m_pClient->m_aClients[i].m_RenderInfo;
+                Info.m_Size = 36.0f;
+                RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(-1,0), vec2(130-offSetX, 83));
 
-	// reason
-	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
-	TextRender()->SetCursor(&Cursor, 5.0f, 79.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = 100.0f;
-	TextRender()->TextEx(&Cursor, aBuf, -1);
+                break;
+            }
+        }
+    }
+    float WidthBox = 100.0f+10.0f+4.0f+5.0f+offSetPreview;
 
-	CUIRect Base = {5, 88, 100, 4};
-	m_pClient->m_pVoting->RenderBars(Base, false);
+    if (m_pClient->m_pVoting->GetState() == CVoting::STATE_NORMAL && m_pClient->m_pVoting->GetLastVote() != 0)
+    {
+        m_pClient->m_pVoting->m_offSetX = min(m_pClient->m_pVoting->m_offSetX+5.0f, WidthBox);
 
-	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
-	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
-	Base.y += Base.h+1;
-	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
+        if (m_pClient->m_pVoting->m_offSetX == WidthBox)
+        {
+            m_pClient->m_pVoting->m_offSetX = 30.0f;
+            m_pClient->m_pVoting->SetState(CVoting::STATE_SMALL);
+        }
+    }
+    else if (m_pClient->m_pVoting->GetState() == CVoting::STATE_SMALL)
+        m_pClient->m_pVoting->m_offSetX = max(-10.0f, m_pClient->m_pVoting->m_offSetX-0.5f);
 
-	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
-	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
+    offSetX = m_pClient->m_pVoting->m_offSetX;
+
+    if (m_pClient->m_pVoting->GetState() == CVoting::STATE_NORMAL)
+    {
+        Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+        Graphics()->QuadsBegin();
+        Graphics()->SetColor(0,0,0,0.40f);
+        RenderTools()->DrawRoundRect(-10-offSetX, 60-2, WidthBox , 46, 5.0f);
+        Graphics()->QuadsEnd();
+
+        TextRender()->TextColor(1,1,1,1);
+
+        CTextCursor Cursor;
+        char aBuf[512];
+        str_format(aBuf, sizeof(aBuf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
+        float tw = TextRender()->TextWidth(0x0, 6, aBuf, -1);
+        TextRender()->SetCursor(&Cursor, 5.0f+100.0f-tw-offSetX, 60.0f, 6.0f, TEXTFLAG_RENDER);
+        TextRender()->TextEx(&Cursor, aBuf, -1);
+
+        TextRender()->SetCursor(&Cursor, 5.0f-offSetX, 60.0f, 6.0f, TEXTFLAG_RENDER);
+        Cursor.m_LineWidth = 100.0f-tw;
+        Cursor.m_MaxLines = 3;
+        TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
+
+        // reason
+        str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
+        TextRender()->SetCursor(&Cursor, 5.0f-offSetX, 79.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+        Cursor.m_LineWidth = 100.0f;
+        TextRender()->TextEx(&Cursor, aBuf, -1);
+
+        CUIRect Base = {5-offSetX, 88, 100, 4};
+        m_pClient->m_pVoting->RenderBars(Base, false);
+
+       const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
+	   const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
+
+        if (m_pClient->m_pVoting->GetLastVote() == 1)
+            TextRender()->TextColor(0.5f, 1.0f, 0.5f, 1.0f);
+        else if (m_pClient->m_pVoting->GetLastVote() != 0)
+            TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+
+        str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
+	    Base.y += Base.h+1;
+	    UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_CENTER);
+        TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (m_pClient->m_pVoting->GetLastVote() == -1)
+            TextRender()->TextColor(0.5f, 1.0f, 0.5f, 1.0f);
+        else if (m_pClient->m_pVoting->GetLastVote() != 0)
+            TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+
+        str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
+	    UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_CENTER);
+
+    }
+    else if (m_pClient->m_pVoting->GetState() == CVoting::STATE_SMALL)
+    {
+        Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+        CUIRect VoteBox;
+        VoteBox.x = -10.0f-offSetX; VoteBox.y = 58.0f;
+        VoteBox.w = 37.0f; VoteBox.h = 22.0f;
+        RenderTools()->DrawUIRect(&VoteBox, vec4(0,0,0,0.8f), CUI::CORNER_R, 2.5f);
+        VoteBox.x = 15.0f-offSetX; VoteBox.y = 58.0f;
+        VoteBox.w = 12.0f; VoteBox.h = 22.0f;
+        RenderTools()->DrawUIRect(&VoteBox, vec4(1,1,1,0.15f), CUI::CORNER_R, 2.5f);
+
+        CTextCursor Cursor;
+
+        TextRender()->TextColor(0.0f, 0.5f, 0.0f, 1.0f);
+        if (m_pClient->m_pVoting->GetNumVotes(1) > m_pClient->m_pVoting->GetNumVotes(2))
+            TextRender()->TextColor(0.5f, 1.0f, 0.0f, 1.0f);
+        char aBuf[512];
+        str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("YES"), m_pClient->m_pVoting->GetNumVotes(1));
+        TextRender()->SetCursor(&Cursor, -7.0f-offSetX, 60.0f, 6.0f, TEXTFLAG_RENDER);
+        TextRender()->TextEx(&Cursor, aBuf, -1);
+
+        TextRender()->TextColor(0.5f, 0.0f, 0.0f, 1.0f);
+        if (m_pClient->m_pVoting->GetNumVotes(2) > m_pClient->m_pVoting->GetNumVotes(1))
+            TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);
+        str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("NO"), m_pClient->m_pVoting->GetNumVotes(2));
+        TextRender()->SetCursor(&Cursor, -7.0f-offSetX, 70.0f, 6.0f, TEXTFLAG_RENDER);
+        TextRender()->TextEx(&Cursor, aBuf, -1);
+
+        TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+        str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_pVoting->SecondsLeft());
+        TextRender()->SetCursor(&Cursor, 17.0f-offSetX, 65.0f, 6.0f, TEXTFLAG_RENDER);
+        TextRender()->TextEx(&Cursor, aBuf, -1);
+
+    }
+
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void CHud::RenderCursor()

@@ -14,10 +14,14 @@
 void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CVoting *pSelf = (CVoting *)pUserData;
+    if (pSelf->m_LastVote != 0)
+        return;
 	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
-		pSelf->Vote(1);
+		pSelf->m_LastVote = 1;
 	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
-		pSelf->Vote(-1);
+		pSelf->m_LastVote = -1;
+		
+	pSelf->Vote(pSelf->m_LastVote);
 }
 
 void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
@@ -28,6 +32,7 @@ void CVoting::Callvote(const char *pType, const char *pValue, const char *pReaso
 	Msg.m_Reason = pReason;
 	Msg.m_Force = ForceVote;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+	m_LastVote = 1;
 }
 
 void CVoting::CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote)
@@ -152,6 +157,9 @@ void CVoting::OnReset()
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
 	m_CallvoteBlockTick = 0;
+	m_LastVote = 0;
+    m_State = STATE_NORMAL;
+    m_offSetX = 0.0f;
 }
 
 void CVoting::OnConsoleInit()

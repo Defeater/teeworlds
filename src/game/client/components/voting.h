@@ -12,6 +12,9 @@
 class CVoting : public CComponent
 {
 	CHeap m_Heap;
+	
+    int m_LastVote;
+    int m_State; 
 
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 
@@ -26,7 +29,13 @@ class CVoting : public CComponent
 	void Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
 
 public:
-	int m_NumVoteOptions;
+	
+enum {
+        STATE_NORMAL=0,
+        STATE_SMALL
+     };
+    
+    int m_NumVoteOptions;
 	CVoteOptionClient *m_pFirst;
 	CVoteOptionClient *m_pLast;
 
@@ -56,6 +65,13 @@ public:
 	const char *VoteDescription() const { return m_aDescription; }
 	const char *VoteReason() const { return m_aReason; }
 	int CallvoteBlockTime() const { return m_CallvoteBlockTick > Client()->GameTick() ? (m_CallvoteBlockTick-Client()->GameTick())/Client()->GameTickSpeed() : 0; }
+    float m_offSetX;
+    int GetLastVote() const { return m_LastVote; }
+    void SetState(int state) { m_State = state; }
+    int GetState() const { return m_State; }
+
+    int GetNumVotes(int type) const { if (type==1) { return m_Yes; } else if (type==2) { return m_No; } else { return m_Pass; } }
+
 };
 
 #endif
