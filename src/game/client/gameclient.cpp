@@ -23,6 +23,7 @@
 
 #include "gameclient.h"
 
+#include "components/announcers.h"
 #include "components/binds.h"
 #include "components/broadcast.h"
 #include "components/camera.h"
@@ -56,12 +57,13 @@
 #include "components/pskins.h"
 #include "components/eskins.h"
 #include "components/cskins.h"
-
+ 
 // instanciate all systems
 static CKillMessages gs_KillMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;
-static CMotd gs_Motd;
+static CMotd gs_Motd;  
+static CAnnouncers gs_Announcers;
 static CBroadcast gs_Broadcast;
 static CGameConsole gs_GameConsole;
 static CBinds gs_Binds;
@@ -168,6 +170,7 @@ void CGameClient::OnConsoleInit()
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 
 	// setup pointers
+	m_pAnnouncers = &::gs_Announcers;
 	m_pBinds = &::gs_Binds;
 	m_pBroadcast = &::gs_Broadcast;
 	m_pGameConsole = &::gs_GameConsole;
@@ -224,6 +227,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_KillMessages);
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
+	m_All.Add(m_pAnnouncers);
 	m_All.Add(&gs_DebugHud);
 	m_All.Add(&gs_Scoreboard);
 	m_All.Add(m_pMotd);
@@ -414,6 +418,8 @@ void CGameClient::OnReset()
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecID = SPEC_FREEVIEW;
 	m_Tuning = CTuningParams();
+	
+	m_FirstBlood = false;
 }
 
 
@@ -820,7 +826,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// apply
 		m_aClients[pMsg->m_ClientID].m_Emoticon = pMsg->m_Emoticon;
 		m_aClients[pMsg->m_ClientID].m_EmoticonStart = Client()->GameTick();
-	}
+	} 
 	else if(MsgId == NETMSGTYPE_DE_CLIENTENTER && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientEnter *pMsg = (CNetMsg_De_ClientEnter *)pRawMsg;
@@ -830,7 +836,20 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_De_ClientLeave *pMsg = (CNetMsg_De_ClientLeave *)pRawMsg;
 		DoLeaveMessage(pMsg->m_pName, pMsg->m_pReason);
-	}
+	}	
+	else if(MsgId == NETMSGTYPE_SV_KILLMSG)
+	{
+		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
+
+		if(g_Config.m_ClGSound && !m_FirstBlood && m_LocalClientID == pMsg->m_Killer && pMsg->m_Killer != pMsg->m_Victim)
+		{
+			m_pSounds->PlayAt(CSounds::CHN_GUI, SOUND_SPREE_FIRSTBLOOD, 0, vec2(0,0));
+			m_pAnnouncers->Announce("FIRST BLOOD", "First kill of the game", 4.0f);
+			
+		}
+		if(!m_FirstBlood && pMsg->m_Killer != pMsg->m_Victim)
+			m_FirstBlood = true;
+	}	
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)

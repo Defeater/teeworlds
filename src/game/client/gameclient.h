@@ -241,6 +241,8 @@ public:
 	virtual void OnGameOver();
 	virtual void OnStartGame();
 
+    bool m_FirstBlood;
+
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();
 	virtual const char *NetVersion();
@@ -286,6 +288,8 @@ public:
 	class CpSkins *m_ppSkins;
 	class CeSkins *m_peSkins;
 	class CcSkins *m_pcSkins;
+	
+	class CAnnouncers *m_pAnnouncers;
 };
 
 

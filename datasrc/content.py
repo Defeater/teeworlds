@@ -230,6 +230,19 @@ container.sounds.Add(SoundSet("ctf_capture", ["audio/sfx_ctf_cap_pl.wv"]))
 
 container.sounds.Add(SoundSet("menu", ["audio/music_menu.wv"]))
 
+#gamer sounds
+container.sounds.Add(SoundSet("spree_killing", ["audio/killingspree.wv"]))
+container.sounds.Add(SoundSet("spree_rampage", ["audio/rampage.wv"]))
+container.sounds.Add(SoundSet("spree_dominating", ["audio/dominating.wv"]))
+container.sounds.Add(SoundSet("spree_godlike", ["audio/godlike.wv"]))
+container.sounds.Add(SoundSet("spree_wickedsick", ["audio/wickedsick.wv"]))
+container.sounds.Add(SoundSet("spree_preparetofight", ["audio/preparetofight.wv"]))
+container.sounds.Add(SoundSet("spree_preparetokill", ["audio/preparetokill.wv"]))
+container.sounds.Add(SoundSet("spree_unstoppable", ["audio/unstoppable.wv"]))
+container.sounds.Add(SoundSet("spree_humiliation", ["audio/humiliation.wv"]))
+container.sounds.Add(SoundSet("spree_firstblood", ["audio/firstblood.wv"]))
+container.sounds.Add(SoundSet("spree_holyshit", ["audio/holyshit.wv"]))
+
 image_null = Image("null", "")
 image_particles = Image("particles", "particles.png")
 image_game = Image("game", "game.png")
