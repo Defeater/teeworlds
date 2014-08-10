@@ -21,7 +21,13 @@ class CPlayers : public CComponent
 		const CNetObj_PlayerInfo *pPrevInfo,
 		const CNetObj_PlayerInfo *pPlayerInfo,
 		int ClientID
-	);
+	);    
+	
+ //rainbow
+ vec3 GetColorV3(int v);
+ vec4 GetColorV4(int v);
+
+ int m_RainbowColor;
 
 public:
 	virtual void OnRender();

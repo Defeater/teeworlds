@@ -198,14 +198,14 @@ void CPlayers::RenderPlayer(
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
-
+     
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
 	float IntraTick = Client()->IntraGameTick();
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
-
+     
 	//float angle = 0;
 
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
@@ -585,13 +585,26 @@ void CPlayers::RenderPlayer(
 	
 }
 
+vec3 CPlayers::GetColorV3(int v)
+{
+ return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+}
+
+vec4 CPlayers::GetColorV4(int v)
+{
+ vec3 r = GetColorV3(v);
+ return vec4(r.r, r.g, r.b, 1.0f);
+}
+
 void CPlayers::OnRender()
 {
-	// update RenderInfo for ninja
+	m_RainbowColor = (m_RainbowColor + 1) % 256;
+	
+    // update RenderInfo for ninja
 	bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
+		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo; 
 		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
 		{
 			// change the skin for the player to the ninja
@@ -605,7 +618,7 @@ void CPlayers::OnRender()
 					{
 						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
 						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
+						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING); 
 					}
 					else if(pNinja->m_aUseCustomColors[p])
 					{
@@ -619,8 +632,29 @@ void CPlayers::OnRender()
 					}
 				}
 			}
-		}
+		}		
 	}
+	
+	if(g_Config.m_ClRainbowFeet)
+	{
+        m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_FEET] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
+    }
+    else if(g_Config.m_ClRainbowBody)
+	{
+        m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_BODY] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
+    }
+    else if(g_Config.m_ClRainbowMarking)
+	{
+        m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_MARKING] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
+    }
+    else if(g_Config.m_ClRainbowDecoration)
+	{
+        m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_DECORATION] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
+    }
+    else if(g_Config.m_ClRainbowHands)
+	{
+        m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_HANDS] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
+    }
 
 	// render other players in two passes, first pass we render the other, second pass we render our self
 	for(int p = 0; p < 4; p++)

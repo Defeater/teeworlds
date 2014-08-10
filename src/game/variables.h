@@ -141,6 +141,14 @@ MACRO_CONFIG_INT(ClAnnouncers, cl_announcers, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SA
 MACRO_CONFIG_INT(ClAnnouncersShadows, cl_announcers_shadows, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Announcers outline shadows")
 MACRO_CONFIG_INT(ClAnnouncersLegend, cl_announcers_legend, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
 
+// rainbow
+MACRO_CONFIG_INT(ClRainbowFeet, cl_rainbow_feet, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
+MACRO_CONFIG_INT(ClRainbowHands, cl_rainbow_hands, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
+MACRO_CONFIG_INT(ClRainbowBody, cl_rainbow_body, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
+MACRO_CONFIG_INT(ClRainbowDecoration, cl_rainbow_decoration, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
+MACRO_CONFIG_INT(ClRainbowMarking, cl_rainbow_marking, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Legend under the announcers")
+
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")

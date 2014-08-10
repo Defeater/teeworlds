@@ -95,21 +95,50 @@ void CMenus::RenderBlaSettingsGeneral(CUIRect MainView)
 	Effect.HSplitTop(ButtonHeight, &Label, &Effect);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Effect"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-	Effect.HSplitTop(Spacing, 0, &Effect);
+	
+    Effect.HSplitTop(Spacing, 0, &Effect);
 	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
 	static int s_Blood = 0;
 	if(DoButton_CheckBox(&s_Blood, Localize("Bloodmod"), g_Config.m_Blood, &Button))
 		g_Config.m_Blood ^= 1;
 
-	if(g_Config.m_Blood)
-	{
 	Effect.HSplitTop(Spacing, 0, &Effect);
 	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	Button.VSplitLeft(ButtonHeight, 0, &Button);
 	static int s_BloodDamage = 0;
 	if(DoButton_CheckBox(&s_BloodDamage, Localize("Damage blood"), g_Config.m_BloodDamage, &Button))
-		g_Config.m_BloodDamage ^= 1;
-	}
+	    g_Config.m_BloodDamage ^= 1;
+		
+	Effect.HSplitTop(Spacing, 0, &Effect);
+	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	static int s_RainbowBody = 0;
+	if(DoButton_CheckBox(&s_RainbowBody, Localize("Rainbow body"), g_Config.m_ClRainbowBody, &Button))
+		g_Config.m_ClRainbowBody ^= 1;
+		
+	Effect.HSplitTop(Spacing, 0, &Effect);
+	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	static int s_RainbowFeet = 0;
+	if(DoButton_CheckBox(&s_RainbowFeet, Localize("Rainbow feet"), g_Config.m_ClRainbowFeet, &Button))
+		g_Config.m_ClRainbowFeet ^= 1;
+		
+	Effect.HSplitTop(Spacing, 0, &Effect);
+	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	static int s_RainbowHands = 0;
+	if(DoButton_CheckBox(&s_RainbowHands, Localize("Rainbow hands"), g_Config.m_ClRainbowHands, &Button))
+		g_Config.m_ClRainbowHands ^= 1;
+		
+	Effect.HSplitTop(Spacing, 0, &Effect);
+	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	static int s_RainbowDecoration = 0;
+	if(DoButton_CheckBox(&s_RainbowDecoration, Localize("Rainbow decoration"), g_Config.m_ClRainbowDecoration, &Button))
+		g_Config.m_ClRainbowDecoration ^= 1;
+		
+	Effect.HSplitTop(Spacing, 0, &Effect);
+	Effect.HSplitTop(ButtonHeight, &Button, &Effect);
+	static int s_RainbowMarking = 0;
+	if(DoButton_CheckBox(&s_RainbowMarking, Localize("Rainbow marking"), g_Config.m_ClRainbowMarking, &Button))
+		g_Config.m_ClRainbowMarking ^= 1;
+		
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 }
