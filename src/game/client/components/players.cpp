@@ -198,14 +198,14 @@ void CPlayers::RenderPlayer(
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
-     
+
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
 	float IntraTick = Client()->IntraGameTick();
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
-     
+
 	//float angle = 0;
 
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
@@ -288,6 +288,27 @@ void CPlayers::RenderPlayer(
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
+     
+     if (g_Config.m_ClYoda)
+		{
+        // light saber
+		if (ct < 0.1f)
+		{
+			if (Direction.x > 0)
+				m_aLightsaber[ClientID].m_TargetDirection = vec2(1, frandom()*0.5f-frandom()*0.5f);
+			else
+				m_aLightsaber[ClientID].m_TargetDirection = vec2(-1, frandom()*0.5f-frandom()*0.5f);
+
+			m_aLightsaber[ClientID].m_Offset = vec2(frandom()*20-frandom()*20, frandom()*10-frandom()*30);
+			m_aLightsaber[ClientID].m_TargetOffset = m_aLightsaber[ClientID].m_Offset;
+			m_aLightsaber[ClientID].m_Alpha = 0.0f;
+		}
+		else
+		{
+			m_aLightsaber[ClientID].m_TargetDirection = vec2(Direction.x / 2.0f, m_aLightsaber[ClientID].m_FlipY);
+			m_aLightsaber[ClientID].m_TargetOffset = vec2(-Direction.x * 10, -8+m_aLightsaber[ClientID].m_FlipY*8);
+		} 
+		}
 	}
 	if (Player.m_Weapon == WEAPON_NINJA)
 	{
@@ -326,6 +347,8 @@ void CPlayers::RenderPlayer(
 		vec2 p;
 		if (Player.m_Weapon == WEAPON_HAMMER)
 		{
+			if (!g_Config.m_ClYoda)
+			{
 			// Static position for hammer
 			p = Position + vec2(State.GetAttach()->m_X, State.GetAttach()->m_Y);
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
@@ -340,6 +363,7 @@ void CPlayers::RenderPlayer(
 				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
 			}
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+			}
 		}
 		else if (Player.m_Weapon == WEAPON_NINJA)
 		{
@@ -495,16 +519,128 @@ void CPlayers::RenderPlayer(
   case 14: emote = EMOTE_HAPPY; break;
   case 15: emote = EMOTE_SURPRISE; break;
  }
- 
+
  if(m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
   Player.m_Emote = emote;
- 
+
  if(m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() < Client()->GameTick() &&
   (Client()->GameTick() - m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() < Client()->GameTickSpeed()*5))
   Player.m_Emote = EMOTE_NORMAL;
-	
+
 
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
+
+    if (Player.m_Weapon == WEAPON_HAMMER)
+	{
+		if (g_Config.m_ClYoda)
+		{
+        //m_aLightsaber[ClientID].m_TargetDirection = Direction;
+		m_aLightsaber[ClientID].DoSteps(Position);
+
+		// render light saber
+		vec2 Dir = m_aLightsaber[ClientID].m_TargetDirection;
+		vec2 Pos = Position + m_aLightsaber[ClientID].m_LightEnd + m_aLightsaber[ClientID].m_Offset;
+		vec2 From = Position + m_aLightsaber[ClientID].m_Offset + Dir*12.0f;
+
+		vec2 Out;
+
+		float r = m_aLightsaber[ClientID].m_SaberColor.x;
+		float g = m_aLightsaber[ClientID].m_SaberColor.y;
+		float b = m_aLightsaber[ClientID].m_SaberColor.z;
+		float a = m_aLightsaber[ClientID].m_Alpha;
+
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(g_pData->m_aImages[-1].m_Id);
+		Graphics()->QuadsBegin();
+
+		// ghost of the light
+		{
+			Graphics()->SetColor(0.0f, 1.0f, 0.0f, 0.4f);
+
+			for (int i = 9; i > 0; i--)
+			{
+				vec2 p1 = vec2(m_aLightsaber[ClientID].m_aOldStartPos[i-1].x, m_aLightsaber[ClientID].m_aOldStartPos[i-1].y);
+				vec2 p2 = vec2(m_aLightsaber[ClientID].m_aOldTipPos[i-1].x, m_aLightsaber[ClientID].m_aOldTipPos[i-1].y);
+				vec2 p3 = vec2(m_aLightsaber[ClientID].m_aOldStartPos[i].x, m_aLightsaber[ClientID].m_aOldStartPos[i].y);
+				vec2 p4 = vec2(m_aLightsaber[ClientID].m_aOldTipPos[i].x, m_aLightsaber[ClientID].m_aOldTipPos[i].y);
+
+				IGraphics::CColorVertex aColors[4] = {
+					IGraphics::CColorVertex(0, r, g, b, 0.6f-(i-1)*0.075f-a),
+					IGraphics::CColorVertex(1, r, g, b, 0.6f-i*0.075f-a),
+					IGraphics::CColorVertex(2, r, g, b, 0.6f-(i-1)*0.075f-a),
+					IGraphics::CColorVertex(3, r, g, b, 0.6f-i*0.075f-a)};
+				Graphics()->SetColorVertex(aColors, 4);
+
+				IGraphics::CFreeformItem Freeform(
+						p2.x, p2.y,
+						p4.x, p4.y,
+						p1.x, p1.y,
+						p3.x, p3.y);
+
+				Graphics()->QuadsDrawFreeform(&Freeform, 1);
+			}
+
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, r, g, b, 0.6f-a),
+				IGraphics::CColorVertex(1, r, g, b, 0.7f-a),
+				IGraphics::CColorVertex(2, r, g, b, 0.6f-a),
+				IGraphics::CColorVertex(3, r, g, b, 0.7f-a)};
+			Graphics()->SetColorVertex(aColors, 4);
+
+			vec2 p1 = vec2(m_aLightsaber[ClientID].m_aOldStartPos[0].x, m_aLightsaber[ClientID].m_aOldStartPos[0].y);
+			vec2 p2 = vec2(m_aLightsaber[ClientID].m_aOldTipPos[0].x, m_aLightsaber[ClientID].m_aOldTipPos[0].y);
+
+
+			IGraphics::CFreeformItem Freeform(
+					p2.x, p2.y,
+					Pos.x, Pos.y,
+					p1.x, p1.y,
+					From.x, From.y);
+
+			Graphics()->QuadsDrawFreeform(&Freeform, 1);
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			Graphics()->SetColor(r+i*0.1f, g+i*0.1f, b+i*0.1f, 0.7f-i*0.22f);
+			Out = vec2(Dir.y, -Dir.x) * (1.0f+i);
+			IGraphics::CFreeformItem Freeform(
+					From.x-Out.x, From.y-Out.y,
+					From.x+Out.x, From.y+Out.y,
+					Pos.x-Out.x, Pos.y-Out.y,
+					Pos.x+Out.x, Pos.y+Out.y);
+			Graphics()->QuadsDrawFreeform(&Freeform, 1);
+
+			if (i != 0)
+				Pos = Pos - Dir*2.0f;
+		}
+
+		// saber hand part
+		Pos = Position + Dir*12.0f + m_aLightsaber[ClientID].m_Offset;
+		From = Position - Dir*12.0f + m_aLightsaber[ClientID].m_Offset;
+
+		Graphics()->SetColor(0.13f, 0.1f, 0.1f, 1.0f);
+		Out = vec2(Dir.y, -Dir.x) * 3.0f;
+		IGraphics::CFreeformItem Freeform1(
+				From.x-Out.x, From.y-Out.y,
+				From.x+Out.x, From.y+Out.y,
+				Pos.x-Out.x, Pos.y-Out.y,
+				Pos.x+Out.x, Pos.y+Out.y);
+		Graphics()->QuadsDrawFreeform(&Freeform1, 1);
+
+
+		Graphics()->QuadsEnd();
+		Graphics()->BlendNormal();
+
+		RenderHand(&RenderInfo, Position + m_aLightsaber[ClientID].m_Offset, Dir, -3*pi/4, vec2(0, 0));
+
+	}
+	else
+	{
+		// clear light saber tracers
+		m_aLightsaber[ClientID].Clear(Position);
+	}
+	}
 
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
@@ -514,7 +650,7 @@ void CPlayers::RenderPlayer(
 		IGraphics::CQuadItem QuadItem(Position.x + 24, Position.y - 40, 64,64);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
-	} 
+	}
 
 	if (m_pClient->m_aClients[ClientID].m_EmoticonStart != -1 && m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
@@ -548,7 +684,7 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
-	
+
 	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_ClHealthBar)
 	{
 
@@ -582,7 +718,7 @@ void CPlayers::RenderPlayer(
 
 		Graphics()->QuadsEnd();
 	}
-	
+
 }
 
 vec3 CPlayers::GetColorV3(int v)
@@ -599,12 +735,12 @@ vec4 CPlayers::GetColorV4(int v)
 void CPlayers::OnRender()
 {
 	m_RainbowColor = (m_RainbowColor + 1) % 256;
-	
+
     // update RenderInfo for ninja
 	bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo; 
+		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
 		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
 		{
 			// change the skin for the player to the ninja
@@ -618,7 +754,7 @@ void CPlayers::OnRender()
 					{
 						m_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
 						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
-						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING); 
+						m_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==CSkins::SKINPART_MARKING);
 					}
 					else if(pNinja->m_aUseCustomColors[p])
 					{
@@ -632,9 +768,9 @@ void CPlayers::OnRender()
 					}
 				}
 			}
-		}		
+		}
 	}
-	
+
 	if(g_Config.m_ClRainbowFeet)
 	{
         m_aRenderInfo[m_pClient->m_LocalClientID].m_aColors[CSkins::SKINPART_FEET] = GetColorV4(m_RainbowColor * 0x010000 + 0xff00);
