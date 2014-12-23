@@ -6,6 +6,7 @@
 #include <game/generated/client_data.h>
 
 #include <base/system.h>
+#include <base/color.h>
 
 #include <engine/shared/ringbuffer.h>
 #include <engine/shared/config.h>
@@ -222,7 +223,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 	}
 }
 
-void CGameConsole::CInstance::PrintLine(const char *pLine)
+void CGameConsole::CInstance::PrintLine(const char *pLine, bool Highlighted)
 {
 	int Len = str_length(pLine);
 
@@ -231,6 +232,7 @@ void CGameConsole::CInstance::PrintLine(const char *pLine)
 
 	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry)+Len);
 	pEntry->m_YOffset = -1.0f;
+	pEntry->m_Highlighted = Highlighted;
 	mem_copy(pEntry->m_aText, pLine, Len);
 	pEntry->m_aText[Len] = 0;
 }
@@ -521,7 +523,7 @@ void CGameConsole::OnRender()
 				}
 			}
 		}
-		TextRender()->TextColor(1,1,1,1);
+		vec3 rgb = HslToRgb(vec3(g_Config.m_ClMessageHighlightHue / 255.0f, g_Config.m_ClMessageHighlightSat / 255.0f, g_Config.m_ClMessageHighlightLht / 255.0f));
 
 		//	render log (actual page, wrap lines)
 		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
@@ -531,8 +533,13 @@ void CGameConsole::OnRender()
 		{
 		    int lineNum=0;
 			while(pEntry)
-			{
-				// get y offset (calculate it if we haven't yet)
+			{				
+                if(pEntry->m_Highlighted)
+                        TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1);
+                else
+                        TextRender()->TextColor(1,1,1,1);
+                
+                // get y offset (calculate it if we haven't yet)
 				if(pEntry->m_YOffset < 0.0f)
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, 0.0f, FontSize, 0);
@@ -769,9 +776,9 @@ void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserD
 	((CGameConsole *)pUserData)->Dump(CONSOLETYPE_REMOTE);
 }
 
-void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
+void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData, bool Highlighted)
 {
-	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr);
+	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, Highlighted);
 }
 
 void CGameConsole::ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
