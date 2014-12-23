@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <base/color.h>
 #include <base/system.h>
 
 #include <engine/shared/datafile.h>
@@ -546,6 +547,24 @@ int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, co
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
+int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, bool Used)
+{
+	// darken the button if not used
+	vec4 ButtonColor = GetButtonColor(pID, Checked);
+	if(!Used)
+		ButtonColor *= vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
+	CUIRect NewRect = *pRect;
+	NewRect.y += NewRect.h/2.0f-7.0f;
+	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1), NewRect.w);
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = NewRect.w;
+	TextRender()->TextEx(&Cursor, pText, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
+
 int CEditor::DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	if(Checked)
@@ -619,6 +638,7 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	if(!m_GridActive)
 		return;
 
+	vec4 GridColor;
 	float aGroupPoints[4];
 	pGroup->Mapping(aGroupPoints);
 
@@ -638,18 +658,20 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	for(int i = 0; i < (int)w; i++)
 	{
 		if((i+YGridOffset) % m_GridFactor == 0)
-			Graphics()->SetColor(1.0f, 0.3f, 0.3f, 0.3f);
+			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
 		else
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.15f);
+			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
 
+		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		IGraphics::CLineItem Line = IGraphics::CLineItem(LineDistance*XOffset, LineDistance*i+LineDistance*YOffset, w+aGroupPoints[2], LineDistance*i+LineDistance*YOffset);
 		Graphics()->LinesDraw(&Line, 1);
 
 		if((i+XGridOffset) % m_GridFactor == 0)
-			Graphics()->SetColor(1.0f, 0.3f, 0.3f, 0.3f);
+			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
 		else
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.15f);
+			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
 
+		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		Line = IGraphics::CLineItem(LineDistance*i+LineDistance*XOffset, LineDistance*YOffset, LineDistance*i+LineDistance*XOffset, h+aGroupPoints[3]);
 		Graphics()->LinesDraw(&Line, 1);
 	}
@@ -1136,9 +1158,11 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	if(m_SelectedQuad == Index)
 	{
 		Graphics()->SetColor(0,0,0,1);
-		IGraphics::CQuadItem QuadItem(CenterX, CenterY, 7.0f, 7.0f);
+		IGraphics::CQuadItem QuadItem(CenterX, CenterY, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
+
+	vec4 PivotColor;
 
 	if(UI()->ActiveItem() == pID)
 	{
@@ -1246,13 +1270,13 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			}
 		}
 
-		Graphics()->SetColor(1,1,1,1);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		Graphics()->SetColor(1,1,1,1);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1290,8 +1314,9 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		}
 	}
 	else
-		Graphics()->SetColor(0,1,0,1);
+		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
 
+	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
@@ -1315,7 +1340,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 	if(m_SelectedQuad == QuadIndex && m_SelectedPoints&(1<<V))
 	{
 		Graphics()->SetColor(0,0,0,1);
-		IGraphics::CQuadItem QuadItem(px, py, 7.0f, 7.0f);
+		IGraphics::CQuadItem QuadItem(px, py, 7.0f*m_WorldZoom, 7.0f*m_WorldZoom);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
 
@@ -1335,6 +1360,8 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		IgnoreGrid = true;
 	else
 		IgnoreGrid = false;
+
+	vec4 pointColor;
 
 	if(UI()->ActiveItem() == pID)
 	{
@@ -1424,13 +1451,13 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 			}
 		}
 
-		Graphics()->SetColor(1,1,1,1);
+		pointColor = HexToRgba(g_Config.m_EdColorQuadPointActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		Graphics()->SetColor(1,1,1,1);
+		pointColor = HexToRgba(g_Config.m_EdColorQuadPointHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1472,8 +1499,9 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		}
 	}
 	else
-		Graphics()->SetColor(1,0,0,1);
+		pointColor = HexToRgba(g_Config.m_EdColorQuadPoint);
 
+	Graphics()->SetColor(pointColor.r, pointColor.g, pointColor.b, pointColor.a);
 	IGraphics::CQuadItem QuadItem(px, py, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
@@ -2770,8 +2798,30 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			str_copy(aBuf, m_Map.m_lImages[i]->m_aName, sizeof(aBuf));
 			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 
-			if(int Result = DoButton_Editor(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
-				BUTTON_CONTEXT, "Select image"))
+			// check if images is used
+			bool Used = false;
+			for(int g = 0; !Used && (g < m_Map.m_lGroups.size()); g++)
+			{
+				CLayerGroup *pGroup = m_Map.m_lGroups[g];
+				for(int l = 0; !Used && (l < pGroup->m_lLayers.size()); l++)
+				{
+					if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
+					{
+						CLayerTiles *pLayer = static_cast<CLayerTiles *>(pGroup->m_lLayers[l]);
+						if(pLayer->m_Image == i)
+							Used = true;
+					}
+					else if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_QUADS)
+					{
+						CLayerQuads *pLayer = static_cast<CLayerQuads *>(pGroup->m_lLayers[l]);
+						if(pLayer->m_Image == i)
+							Used = true;
+					}
+				}
+			}
+
+			if(int Result = DoButton_Image(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
+				BUTTON_CONTEXT, "Select image", Used))
 			{
 				m_SelectedImage = i;
 
@@ -4033,11 +4083,20 @@ void CEditor::Render()
 	}
 	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
 	{
+		// Determines in which direction to zoom.
+		int Zoom = 0;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
-			m_ZoomLevel -= 20;
-
+			Zoom--;
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
-			m_ZoomLevel += 20;
+			Zoom++;
+
+		if(Zoom != 0)
+		{
+			float OldLevel = m_ZoomLevel;
+			m_ZoomLevel = clamp(m_ZoomLevel + Zoom * 20, 50, 2000);
+			if(g_Config.m_EdZoomTarget)
+				ZoomMouseTarget((float)m_ZoomLevel / OldLevel);
+		}
 	}
 	m_ZoomLevel = clamp(m_ZoomLevel, 50, 2000);
 	m_WorldZoom = m_ZoomLevel/100.0f;
@@ -4191,6 +4250,26 @@ int CEditor::GetLineDistance()
 		LineDistance = 256;
 
 	return LineDistance;
+}
+
+void CEditor::ZoomMouseTarget(float ZoomFactor)
+{
+	// zoom to the current mouse position
+	// get absolute mouse position
+	float aPoints[4];
+	RenderTools()->MapScreenToWorld(
+		m_WorldOffsetX, m_WorldOffsetY,
+		1.0f, 1.0f, 0.0f, 0.0f, Graphics()->ScreenAspect(), m_WorldZoom, aPoints);
+
+	float WorldWidth = aPoints[2]-aPoints[0];
+	float WorldHeight = aPoints[3]-aPoints[1];
+
+	float Mwx = aPoints[0] + WorldWidth * (UI()->MouseX()/UI()->Screen()->w);
+	float Mwy = aPoints[1] + WorldHeight * (UI()->MouseY()/UI()->Screen()->h);
+
+	// adjust camera
+	m_WorldOffsetX += (Mwx-m_WorldOffsetX) * (1-ZoomFactor);
+	m_WorldOffsetY += (Mwy-m_WorldOffsetY) * (1-ZoomFactor);
 }
 
 void CEditorMap::DeleteEnvelope(int Index)
