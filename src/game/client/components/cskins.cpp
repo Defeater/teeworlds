@@ -4,6 +4,7 @@
 
 #include <base/system.h>
 #include <base/math.h>
+#include <base/color.h>  
 
 #include <engine/graphics.h>
 #include <engine/storage.h>

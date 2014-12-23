@@ -5,6 +5,7 @@
 #include <base/system.h>
 #include <base/math.h>
 #include <base/vmath.h>
+#include <base/color.h>  
 
 #include <engine/config.h>
 #include <engine/editor.h>

@@ -4,6 +4,7 @@
 
 #include <base/system.h>
 #include <base/math.h>
+#include <base/color.h>  
 
 #include <engine/graphics.h>
 #include <engine/storage.h>
@@ -96,7 +97,7 @@ int CgSkins::Find(const char *pName)
 
 vec3 CgSkins::GetColorV3(int v)
 {
-	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));   
 }
 
 vec4 CgSkins::GetColorV4(int v)
