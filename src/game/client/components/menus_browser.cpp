@@ -6,7 +6,8 @@
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
-#include <engine/shared/config.h>
+#include <engine/shared/config.h> 
+#include <engine/geoip.h>  
 
 #include <game/generated/client_data.h>
 #include <game/generated/protocol.h>
@@ -224,7 +225,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 
 		if(ID == COL_FLAG)
 		{
-			CUIRect Rect = Button;
+			CUIRect Rect = Button;  
 			CUIRect Icon;
 
 			Rect.VSplitLeft(2.0f, 0, &Rect);
@@ -351,7 +352,18 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect *pRect, const CServerInfo *p
 			int Ping = pEntry->m_Latency;
 
 			vec4 Color;
-			if(Selected || Inside)
+			
+			// handle mouse over
+			if(m_InfoMode && UI()->MouseInside(&Button))
+			{
+				// overlay
+				SetOverlay(CInfoOverlay::OVERLAY_PINGINFO, UI()->MouseX(), UI()->MouseY(), pEntry);
+
+				// rect
+				RenderTools()->DrawUIRect(&Button, vec4(0.973f, 0.863f, 0.207, 0.75f), CUI::CORNER_ALL, 5.0f);
+			}
+            
+            if(Selected || Inside)
 			{
 				Color = vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAplpha);
 			}
@@ -527,7 +539,11 @@ bool CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 void CMenus::RenderServerbrowserOverlay()
 {
-	if(!m_InfoOverlayActive)
+	static char selectedServIP[64]={0};
+    static IGeoIP::GeoInfo geoInfo;
+    static InfoGeoIPThread infoGeoThread;
+    
+    if(!m_InfoOverlayActive)
 	{
 		m_InfoOverlay.m_Reset = true;
 		return;
@@ -576,7 +592,7 @@ void CMenus::RenderServerbrowserOverlay()
 
 		RenderServerbrowserServerDetail(View, pInfo);
 	}
-	else if(Type == CInfoOverlay::OVERLAY_PLAYERSINFO)
+	else if(Type == CInfoOverlay::OVERLAY_PLAYERSINFO)    
 	{
 		const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
 
@@ -705,7 +721,7 @@ void CMenus::RenderServerbrowserOverlay()
 
 			// render background
 			RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 6.0f);
-
+            
 			View.y += 2.0f;
 			UI()->DoLabel(&View, Localize("no players"), View.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 		}
@@ -713,7 +729,63 @@ void CMenus::RenderServerbrowserOverlay()
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 	}
+	else if(Type == CInfoOverlay::OVERLAY_PINGINFO)
+    {
+			const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
+            
+            CUIRect Screen = *UI()->Screen(), Flag, Color;
+		    float ButtonHeight = 20.0f;
+            char aBuf[125];
+            
+            TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+		    TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+            
+            View.x = m_InfoOverlay.m_X+25.0f;
+			View.y = m_InfoOverlay.m_Y;
+			View.w = 150.0f;
+			View.h = ButtonHeight;
+			if(View.x+View.w > Screen.w-5.0f)
+			{
+				View.y += 25.0f;
+				View.x -= View.x+View.w-Screen.w+5.0f;
+			}
+			if(View.y+View.h >= 590.0f)
+				View.y -= View.y+View.h - 590.0f;
+                       
+            // render background
+			RenderTools()->DrawUIRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 6.0f);
+                        
+            if (str_comp(pInfo->m_aAddress, selectedServIP) != 0)
+            {
+                    if (m_pGeoIPThread)
+                    {
+                        //thread_wait(m_pGeoIPThread);
+                        thread_destroy(m_pGeoIPThread);
+                        m_pGeoIPThread = 0x0;     
+                    }
 
+                    std::string host = std::string(pInfo->m_aAddress);
+
+				    str_copy(infoGeoThread.ip, host.substr(0, host.find_first_of(":")).c_str(), sizeof(infoGeoThread.ip));
+				    geoInfo.m_CountryCode = "_P_";
+				    infoGeoThread.m_pGeoInfo = &geoInfo;
+				    infoGeoThread.m_pGeoIP = GeoIP();
+				    m_pGeoIPThread = thread_create(ThreadGeoIP, &infoGeoThread);
+
+				    str_copy(selectedServIP, pInfo->m_aAddress, sizeof(selectedServIP));
+                }
+                if (geoInfo.m_CountryCode.compare("_P_") == 0)
+                    str_format(aBuf, sizeof(aBuf), "Country: Searching...");
+                else if (geoInfo.m_CountryCode.compare("NULL") == 0)
+                   str_format(aBuf, sizeof(aBuf), "Country: Unknown");
+                else
+                    str_format(aBuf, sizeof(aBuf), "Country: %s", geoInfo.m_CountryName.c_str());          
+                            
+			View.y += 2.0f;
+			UI()->DoLabel(&View, aBuf, View.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+          
+		}
+    
 	// deactivate it
 	vec2 OverlayCenter = vec2(View.x+View.w/2.0f, View.y+View.h/2.0f);
 	float MouseDistance = distance(m_MousePos, OverlayCenter);

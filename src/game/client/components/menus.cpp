@@ -77,6 +77,8 @@ CMenus::CMenus()
 
 	m_SelectedServer.m_Filter = -1;
 	m_SelectedServer.m_Index = -1;
+	
+	m_pGeoIPThread = 0x0;
 }
 
 float *CMenus::ButtonFade(const void *pID, float Seconds, int Checked)

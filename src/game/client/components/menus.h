@@ -327,6 +327,7 @@ class CMenus : public CComponent
 			OVERLAY_SERVERINFO=0,
 			OVERLAY_HEADERINFO,
 			OVERLAY_PLAYERSINFO,
+			OVERLAY_PINGINFO,
 		};
 
 		int m_Type;
@@ -487,6 +488,7 @@ class CMenus : public CComponent
 	IGraphics::CTextureHandle m_TextureLogo;
 
 	void ToggleMusic();
+	void *m_pGeoIPThread;
 public:
 	
 	void setPopup(int Popup) { m_Popup = Popup; }
