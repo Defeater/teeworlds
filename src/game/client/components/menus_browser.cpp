@@ -733,7 +733,7 @@ void CMenus::RenderServerbrowserOverlay()
     {
 			const CServerInfo *pInfo = (CServerInfo*)m_InfoOverlay.m_pData;
             
-            CUIRect Screen = *UI()->Screen(), Flag, Color;
+            CUIRect Screen = *UI()->Screen();
 		    float ButtonHeight = 20.0f;
             char aBuf[125];
             
