@@ -63,6 +63,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IStorage *m_pStorage;
 	IAutoUpdate *m_pAutoUpdate;
 	IEngineMasterServer *m_pMasterServer;
+	IGeoIP *m_pGeoIP;
 
 	enum
 	{
@@ -77,6 +78,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CAutoUpdate m_AutoUpdate;
 	class CFriends m_Friends;
 	class CMapChecker m_MapChecker;
+	class CGeoIP m_GeoIP;
 
 	char m_aServerAddressStr[256];
 
@@ -196,6 +198,7 @@ public:
 	IEngineMasterServer *MasterServer() { return m_pMasterServer; }
 	IStorage *Storage() { return m_pStorage; }
 	IAutoUpdate *AutoUpdate() { return m_pAutoUpdate; }
+	IGeoIP *GeoIP() { return m_pGeoIP; } 
 
 	CClient();
 

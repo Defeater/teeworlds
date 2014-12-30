@@ -13,6 +13,7 @@
 #include <engine/autoupdate.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
+#include <engine/geoip.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -168,6 +169,7 @@ void CGameClient::OnConsoleInit()
 	m_pAutoUpdate = Kernel()->RequestInterface<IAutoUpdate>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
+	m_pGeoIP = Kernel()->RequestInterface<IGeoIP>();
 
 	// setup pointers
 	m_pAnnouncers = &::gs_Announcers;

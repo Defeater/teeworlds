@@ -45,6 +45,7 @@ class CGameClient : public IGameClient
 	class IAutoUpdate *m_pAutoUpdate;
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
+	class IGeoIP *m_pGeoIP;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -85,6 +86,7 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+	class IGeoIP *GeoIP() const { return m_pGeoIP; } 
 
 	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }

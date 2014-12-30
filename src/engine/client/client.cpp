@@ -41,6 +41,7 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include "geoip.h"
 #include "friends.h"
 #include "serverbrowser.h"
 #include "autoupdate.h"
@@ -1695,6 +1696,7 @@ void CClient::RegisterInterfaces()
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
 	Kernel()->RegisterInterface(static_cast<IAutoUpdate*>(&m_AutoUpdate));
     Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
+    Kernel()->RegisterInterface(static_cast<IGeoIP*>(&m_GeoIP));
 }
 
 void CClient::InitInterfaces()
@@ -1710,6 +1712,7 @@ void CClient::InitInterfaces()
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
 	m_pAutoUpdate = Kernel()->RequestInterface<IAutoUpdate>();
     m_pStorage = Kernel()->RequestInterface<IStorage>();
+    m_pGeoIP = Kernel()->RequestInterface<IGeoIP>(); 
 
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
