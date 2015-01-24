@@ -170,6 +170,7 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 	{
 		
 		Graphics()->TextureSet(pImage->m_GreyTexture);
+		Graphics()->WrapClamp();
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
@@ -179,11 +180,14 @@ int CMenus::DoButton_MenuImage(const void *pID, const char *pText, int Checked, 
 		if(*pFade > 0.0f)
 		{
 			Graphics()->TextureSet(pImage->m_OrgTexture);
+			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, *pFade/Seconds);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
+		
+		Graphics()->WrapNormal();
 		
 	}
 
