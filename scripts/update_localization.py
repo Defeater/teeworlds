@@ -61,8 +61,8 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
 
     num_items = set(translations) | set(l10n_src)
     tsl_items = set(translations) & set(l10n_src)
-    new_items = set(translations) - set(l10n_src)
-    old_items = set(l10n_src) - set(translations)
+    old_items = set(translations) - set(l10n_src)
+    new_items = set(l10n_src) - set(translations)
 
     def to_transl(set_):
             return [
@@ -70,14 +70,21 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
                 JSON_KEY_OR: x,
                 JSON_KEY_TR: translations.get(x, ""),
             }
-            for x in set_
+            for x in sorted(set_)
         ]
 
     result[JSON_KEY_TRANSL] = to_transl(tsl_items)
     result[JSON_KEY_UNTRANSL] = to_transl(new_items)
     result[JSON_KEY_OLDTRANSL] = to_transl(old_items)
     
-    json.dump(result, open(outputfilename, 'w'), sort_keys=True, indent=2)
+    json.dump(
+            result,
+            open(outputfilename, 'w'),
+            ensure_ascii=False,
+            indent="\t",
+            separators=(',', ': '),
+            sort_keys=True,
+    )
     
     print(format(outputfilename, len(num_items), len(new_items), len(old_items)))
 
