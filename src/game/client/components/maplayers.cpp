@@ -36,17 +36,19 @@ void CMapLayers::OnInit()
 	{
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
+		
+		int HourOfTheDay = (time_timestamp()/3600)%24;
 
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "maps/%s_%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClBackgroundMap);
+			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 			return;
 		}
 
-		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 
 		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
@@ -365,17 +367,19 @@ void CMapLayers::BackgroundMapUpdate()
 	{
 		// unload map
 		m_pMenuMap->Unload();
+		
+		int HourOfTheDay = (time_timestamp()/3600)%24;
 
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "maps/%s.map", g_Config.m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 		{
-			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClBackgroundMap);
+			str_format(aBuf, sizeof(aBuf), "map '%s' not found", g_Config.m_ClMenuMap);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 			return;
 		}
 
-		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClBackgroundMap);
+		str_format(aBuf, sizeof(aBuf), "loaded map '%s'", g_Config.m_ClMenuMap);
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 
 		m_pMenuLayers->Init(Kernel(), m_pMenuMap);
