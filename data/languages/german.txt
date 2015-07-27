@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d Bytes
@@ -78,6 +79,9 @@ Blue team wins!
 Body
 == Körper
 
+Borderless window
+== Randloses Fenster
+
 Call vote
 == Abstimmen
 
@@ -121,7 +125,7 @@ Country
 == Land
 
 Crc:
-== Prüfsumme:
+== Prüfsumme(CRC32):
 
 Created:
 == Erstellt:
@@ -243,6 +247,9 @@ Grenade
 Hammer
 == Hammer
 
+Handle rendering async from updates
+== spielunabhängige Bilddarstellung
+
 Has people playing
 == Server nicht leer
 
@@ -325,7 +332,7 @@ Move left
 == Nach links
 
 Move player to spectators
-== Spieler zu Zuschauer machen
+== Spieler zum Zuschauer machen
 
 Move right
 == Nach rechts
@@ -355,7 +362,7 @@ Next weapon
 == Nächste Waffe
 
 Nickname
-== Spitzname
+== Spielername
 
 No
 == Nein
@@ -451,7 +458,7 @@ Remote console
 == Remotekonsole
 
 Remove
-== Löschen
+== Entfernen
 
 Remove friend
 == Freund entfernen
@@ -484,7 +491,7 @@ Sat.
 == Sätt.
 
 Score
-== Score
+== Punktestand
 
 Score board
 == Punktetafel
@@ -523,10 +530,10 @@ Show chat
 == Chat anzeigen
 
 Show friends only
-== Nur Freunde zeigen
+== Nur Freunde anzeigen
 
 Show ingame HUD
-== Spielanzeigen
+== Spielanzeigen darstellen
 
 Show name plates
 == Zeige Namen
@@ -601,10 +608,16 @@ The audio device couldn't be initialised.
 == Das Audiosystem konnte nicht gestartet werden.
 
 The server is running a non-standard tuning on a pure game type.
-== Der Server läuft nicht mit Standardeinstellungen.
+== Der Server läuft nicht mit standardmäßigen Tuning-Einstellungen auf einem Vanilla-Spieltypen.
 
 There's an unsaved map in the editor, you might want to save it before you quit the game.
-== Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern.
+== Im Editor ist noch eine ungespeicherte Karte. Vielleicht möchtest du sie speichern, bevor du das Spiel beendest.
+
+Threaded rendering
+== Parallele Darstellung des Bildes zum Spiel
+
+Threaded sound loading
+== Paralleles Laden der Audiodateien zum Spiel
 
 Time limit
 == Zeitlimit
@@ -673,7 +686,7 @@ Yes
 == Ja
 
 You must restart the game for all settings to take effect.
-== Du musst das Spiel neustarten um die Änderungen zu übernehmen.
+== Du musst das Spiel neustarten, um die Änderungen zu übernehmen.
 
 Your skin
 == Dein Skin
@@ -684,3 +697,4 @@ no limit
 ##### needs translation #####
 
 ##### old translations #####
+
