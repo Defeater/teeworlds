@@ -10,6 +10,7 @@
 #include "projectile.h"
 #include "airstrike.h"
 #include "turret.h"
+#include "spawnprotect.h"
 
 //input count
 struct CInputCount
@@ -68,6 +69,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
+	m_Protection = Server()->Tick();
+
 	m_Core.Reset();
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
@@ -93,6 +96,12 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	{
 		m_ActiveWeapon = WEAPON_GUN;
 		m_LastWeapon = WEAPON_HAMMER;
+	}
+
+	if(g_Config.m_SvProtected)
+	{
+		m_SpawnProtection = Server()->Tick();
+		 new CSpawProtect(GameWorld(), m_pPlayer->GetCID());
 	}
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
@@ -608,6 +617,14 @@ void CCharacter::ResetInput()
 	m_LatestPrevInput = m_LatestInput = m_Input;
 }
 
+bool CCharacter::Protected()
+{
+	if(m_SpawnProtection + 3 * Server()->TickSpeed() > Server()->Tick())
+		return true;
+
+	return false;
+}
+
 void CCharacter::Tick()
 {
 	if(m_pPlayer->m_ForceBalanced)
@@ -757,6 +774,10 @@ void CCharacter::Die(int Killer, int Weapon)
 {
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
+
+    if(Protected())
+	   return;
+
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
 	if(m_pWall)
@@ -790,6 +811,9 @@ void CCharacter::Die(int Killer, int Weapon)
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
+	if(Protected())
+		return false;
+
 	if(GameServer()->m_apPlayers[From]->m_Infected)
 	{
 		Infect(From, Force * (g_Config.m_SvHammerhitStrength/10.f));

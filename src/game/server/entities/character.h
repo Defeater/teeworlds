@@ -25,6 +25,9 @@ public:
 	//character's size
 	static const int ms_PhysSize = 28;
 
+    int64 m_SpawnProtection;
+	int64 m_Protection;
+
 	CCharacter(CGameWorld *pWorld);
 
 	virtual void Reset();
@@ -50,6 +53,9 @@ public:
 
 	void Die(int Killer, int Weapon);
 	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
+
+    bool m_Protected;
+    bool Protected();
 
 	bool Spawn(class CPlayer *pPlayer, vec2 Pos);
 	bool Remove();
