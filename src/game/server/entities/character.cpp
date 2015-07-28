@@ -76,6 +76,20 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
 
+	if(GameServer()->m_pController->GameStarted())
+		m_pPlayer->m_Infected = true;
+
+	if(m_pPlayer->m_Infected)
+	{
+		m_ActiveWeapon = WEAPON_HAMMER;
+		m_LastWeapon = WEAPON_HAMMER;
+	}
+	else
+	{
+		m_ActiveWeapon = WEAPON_GUN;
+		m_LastWeapon = WEAPON_HAMMER;
+	}
+
 	GameServer()->m_pController->OnCharacterSpawn(this);
 
 	return true;
@@ -313,7 +327,8 @@ void CCharacter::FireWeapon()
 				else
 					Dir = vec2(0.f, -1.f);
 
-				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
+				if(m_pPlayer->m_Infected)
+					pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 				Hits++;
 			}
@@ -726,10 +741,17 @@ void CCharacter::Die(int Killer, int Weapon)
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
-	m_Core.m_Vel += Force;
+	if(GameServer()->m_apPlayers[From]->m_Infected)
+	{
+		Infect(From, Force * (g_Config.m_SvHammerhitStrength/10.f));
+	}
+	else
+	{
+		m_Core.m_Vel += Force;
+	}
 
-	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
-		return false;
+//	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
+//		return false;
 
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
@@ -749,29 +771,58 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
 	}
 
-	if(Dmg)
+	if(m_pPlayer->m_Infected && GameServer()->m_apPlayers[From]->m_Infected && Weapon == WEAPON_HAMMER)
 	{
-		if(m_Armor)
+		if(Dmg)
 		{
-			if(Dmg > 1)
+			if(m_Armor < 10)
 			{
-				m_Health--;
-				Dmg--;
+				if(Dmg > 1)
+				{
+					m_Health = clamp(m_Health+1, 0, 10);
+					Dmg--;
+				}
+				if(Dmg > m_Armor)
+				{
+					Dmg -= m_Armor;
+					m_Armor = 10;
+				}
+				else
+				{
+					m_Armor = clamp(m_Armor+Dmg, 0, 10);
+					Dmg = 0;
+				}
 			}
 
-			if(Dmg > m_Armor)
-			{
-				Dmg -= m_Armor;
-				m_Armor = 0;
-			}
-			else
-			{
-				m_Armor -= Dmg;
-				Dmg = 0;
-			}
+			m_Health = clamp(m_Health+Dmg, 0, 10);
 		}
+	}
+	else if(!GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From))
+	{
+		if(Dmg)
+		{
 
-		m_Health -= Dmg;
+			if(m_Armor)
+			{
+				if(Dmg > 1)
+				{
+					m_Health--;
+					Dmg--;
+				}
+
+				if(Dmg > m_Armor)
+				{
+					Dmg -= m_Armor;
+					m_Armor = 0;
+				}
+				else
+				{
+					m_Armor -= Dmg;
+					Dmg = 0;
+				}
+			}
+			m_Health -= Dmg;
+		}
 	}
 
 	m_DamageTakenTick = Server()->Tick();
@@ -875,4 +926,36 @@ void CCharacter::Snap(int SnappingClient)
 	}
 
 	pCharacter->m_PlayerFlags = GetPlayer()->m_PlayerFlags;
+}
+
+void CCharacter::SendKillMessage(int Killer, int Weapon)
+{
+	 // send the kill message
+	CNetMsg_Sv_KillMsg Msg;
+	Msg.m_Killer = Killer;
+	Msg.m_Victim = m_pPlayer->GetCID();
+	Msg.m_Weapon = Weapon;
+	Msg.m_ModeSpecial = 0;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+}
+
+void CCharacter::Infect(int From, vec2 Vel, bool Msg)
+{
+	m_Core.m_Vel += Vel;
+
+	if(m_pPlayer->m_Infected || !GameServer()->m_pController->GameStarted())
+	return;
+
+	for(int i = 0; i < NUM_WEAPONS; i++)
+	m_aWeapons[i].m_Got = false;
+	GiveWeapon(WEAPON_HAMMER, -1);
+	m_LastWeapon = WEAPON_HAMMER;
+	m_ActiveWeapon = WEAPON_HAMMER;
+
+	GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[From], WEAPON_HAMMER);
+	m_pPlayer->m_Infected = true;
+	if(Msg)
+		SendKillMessage(From, WEAPON_HAMMER);
+	GameServer()->CreatePlayerSpawn(m_Pos);
+	GameServer()->m_pController->OnPlayerInfoChange(m_pPlayer);
 }

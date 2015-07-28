@@ -84,6 +84,12 @@ MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow votin
 MACRO_CONFIG_INT(SvVoteKickMin, sv_vote_kick_min, 0, 0, MAX_CLIENTS, CFGFLAG_SERVER, "Minimum number of players required to start a kick vote")
 MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time to ban a player if kicked by vote. 0 makes it just use kick")
 
+//infection
+MACRO_CONFIG_INT(SvGameDelay, sv_game_delay, 10, 2, 60, CFGFLAG_SERVER, "Delay before the first human gets infected")
+MACRO_CONFIG_INT(SvExplode, sv_explode, 1, 0, 2, CFGFLAG_SERVER, "Explosion for zombies = 0, for |Zombies =1, for all = 2 after death")
+MACRO_CONFIG_INT(SvHammerhitStrength, sv_hammerhit_strength, 15, 2, 60, CFGFLAG_SERVER, "Strength of hammerhit of zombies")
+MACRO_CONFIG_INT(SvRoundstartDelay, sv_roundstart_delay, 5, 2, 10, CFGFLAG_SERVER, "Delay between rounds")
+
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")

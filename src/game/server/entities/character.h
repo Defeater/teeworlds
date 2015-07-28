@@ -64,6 +64,10 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
+	CCharacterCore *GetCore() { return &m_Core; }
+	void SendKillMessage(int Killer, int Weapon);
+	void Infect(int From, vec2 Vel, bool Msg = true);
+
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;

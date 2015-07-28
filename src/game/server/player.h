@@ -96,6 +96,9 @@ public:
 		int m_Max;
 	} m_Latency;
 
+	bool m_Infected;
+	bool m_StartZombie;
+
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
