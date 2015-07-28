@@ -61,6 +61,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 
+	m_Hammerhits = 0;
+
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
@@ -336,6 +338,30 @@ void CCharacter::FireWeapon()
 			// if we Hit anything, we have to wait for the reload
 			if(Hits)
 				m_ReloadTimer = Server()->TickSpeed()/3;
+
+			if(!m_pPlayer->m_Infected)
+			{
+				m_Hammerhits++;
+
+				if(m_Hammerhits == 1)
+				{
+					m_FirstHit = m_Pos;
+					if(m_pWall)
+					m_pWall->Reset();
+				}
+				else
+				{
+					vec2 SecondSpot = m_Pos;
+					if(length(SecondSpot - m_FirstHit) > g_Config.m_SvWallLength)
+					{
+						vec2 Dir = normalize(m_Pos - m_FirstHit);
+						SecondSpot = m_FirstHit+Dir*g_Config.m_SvWallLength;
+					}
+
+					m_pWall = new CWall(GameWorld(), m_FirstHit, SecondSpot, m_pPlayer->GetCID());
+					m_Hammerhits = 0;
+				}
+			}
 
 		} break;
 
@@ -712,6 +738,9 @@ void CCharacter::Die(int Killer, int Weapon)
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
+
+	if(m_pWall)
+		m_pWall->Reset(); // Delete the wall of a dying player
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",

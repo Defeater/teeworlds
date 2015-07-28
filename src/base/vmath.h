@@ -207,6 +207,14 @@ public:
 	operator const T* () { return &x; }
 };
 
+template<typename T>
+bool equals(T first, T sec, float precison = 0.001f)
+{
+	if(distance(first, sec) < precison)
+		return true;
+	return false;
+}
+
 typedef vector4_base<float> vec4;
 typedef vector4_base<bool> bvec4;
 typedef vector4_base<int> ivec4;

@@ -89,6 +89,9 @@ MACRO_CONFIG_INT(SvGameDelay, sv_game_delay, 10, 2, 60, CFGFLAG_SERVER, "Delay b
 MACRO_CONFIG_INT(SvExplode, sv_explode, 1, 0, 2, CFGFLAG_SERVER, "Explosion for zombies = 0, for |Zombies =1, for all = 2 after death")
 MACRO_CONFIG_INT(SvHammerhitStrength, sv_hammerhit_strength, 15, 2, 60, CFGFLAG_SERVER, "Strength of hammerhit of zombies")
 MACRO_CONFIG_INT(SvRoundstartDelay, sv_roundstart_delay, 5, 2, 10, CFGFLAG_SERVER, "Delay between rounds")
+MACRO_CONFIG_INT(SvWallLife, sv_wall_life, 30, 10, 60, CFGFLAG_SERVER, "Time till the wall disappears")
+MACRO_CONFIG_INT(SvWallDelay, sv_wall_delay, 1, 0, 5, CFGFLAG_SERVER, "Time till the wall becomes visible and active")
+MACRO_CONFIG_INT(SvWallLength, sv_wall_length, 400, 100, 800, CFGFLAG_SERVER, "Length of the wall")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
