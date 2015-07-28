@@ -90,6 +90,8 @@ public:
 			STATE_READY,
 			STATE_INGAME,
 
+			STATE_DUMMY,
+
 			SNAPRATE_INIT=0,
 			SNAPRATE_FULL,
 			SNAPRATE_RECOVER
@@ -209,6 +211,9 @@ public:
 
 	void SendServerInfo(const NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
+
+	void DummyJoin(int DummyID, const char *pDummyName, const char *pDummyClan, int Country);
+	void DummyLeave(int DummyID, const char *pDummyName = 0);
 
 	void PumpNetwork();
 

@@ -66,6 +66,10 @@ public:
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
+
+	// Dummy
+	virtual void DummyJoin(int DummyID, const char *pDummyName, const char *pDummyClan, int Country) = 0;
+	virtual void DummyLeave(int DummyID, const char *pDummyName = 0) = 0;
 };
 
 class IGameServer : public IInterface
