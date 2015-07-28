@@ -92,6 +92,9 @@ MACRO_CONFIG_INT(SvRoundstartDelay, sv_roundstart_delay, 5, 2, 10, CFGFLAG_SERVE
 MACRO_CONFIG_INT(SvWallLife, sv_wall_life, 30, 10, 60, CFGFLAG_SERVER, "Time till the wall disappears")
 MACRO_CONFIG_INT(SvWallDelay, sv_wall_delay, 1, 0, 5, CFGFLAG_SERVER, "Time till the wall becomes visible and active")
 MACRO_CONFIG_INT(SvWallLength, sv_wall_length, 400, 100, 800, CFGFLAG_SERVER, "Length of the wall")
+MACRO_CONFIG_INT(SvSuperjumpKills, sv_superjump_kills, 2, 0, 10, CFGFLAG_SERVER, "Kills needed for an zombie-superjump")
+MACRO_CONFIG_STR(SvSuperjumpText, sv_superjump_text, 128, "%s mutated and can now superjump!", CFGFLAG_SERVER, "Text shown in text when a zombie gets ability for superjump")
+MACRO_CONFIG_INT(SvSuperjumpForce, sv_superjump_force, 40, 10, 100, CFGFLAG_SERVER, "Strength of superjump")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

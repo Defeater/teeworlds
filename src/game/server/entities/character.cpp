@@ -69,6 +69,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Core.Reset();
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
+	m_Core.m_HasSuperjump = m_pPlayer->m_Kills >= g_Config.m_SvSuperjumpKills;
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
 	m_ReckoningTick = 0;
@@ -971,6 +972,8 @@ void CCharacter::SendKillMessage(int Killer, int Weapon)
 void CCharacter::Infect(int From, vec2 Vel, bool Msg)
 {
 	m_Core.m_Vel += Vel;
+	if(m_pWall)
+		m_pWall->Reset();
 
 	if(m_pPlayer->m_Infected || !GameServer()->m_pController->GameStarted())
 	return;

@@ -125,6 +125,27 @@ int CGameControllerINF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 			}
 		}		
 	}
+	if(!pVictim->GetPlayer()->m_Infected)
+	{
+		pVictim->GetPlayer()->m_Kills = 0;
+		pVictim->GetPlayer()->m_Infected = true;
+
+		if(pVictim->GetPlayer() != pKiller)
+		{
+			pKiller->m_Score += 2;
+			pKiller->m_Kills++;
+
+			if(pKiller->m_Kills == g_Config.m_SvSuperjumpKills)
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), g_Config.m_SvSuperjumpText, Server()->ClientName(pKiller->GetCID()));
+				GameServer()->SendChatTarget(-1, aBuf);
+				GameServer()->SendBroadcast("You earned superjump, hold jump to use!", pKiller->GetCID());
+				if(pKiller->GetCharacter())
+					pKiller->GetCharacter()->GetCore()->m_HasSuperjump = true;
+			}
+		}
+	}
 
 	OnPlayerInfoChange(pVictim->GetPlayer());
 	return 0;
@@ -160,6 +181,8 @@ void CGameControllerINF::StartRound()
 
 		pPlayer->m_Infected = false;
 		pPlayer->m_StartZombie = false;
+		pPlayer->m_Kills = 0;
+		pPlayer->m_HasSuperjump = false;
 	}
 }
 

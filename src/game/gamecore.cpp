@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
+#include <engine/shared/config.h>
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -127,6 +128,14 @@ void CCharacterCore::Tick(bool UseInput)
 					m_TriggeredEvents |= COREEVENT_AIR_JUMP;
 					m_Vel.y = -m_pWorld->m_Tuning.m_AirJumpImpulse;
 					m_Jumped |= 3;
+				}
+			}
+			else if(m_HasSuperjump)
+			{
+				if(Grounded)
+				{
+						m_TriggeredEvents |= COREEVENT_GROUND_JUMP;
+						m_Vel.y = -g_Config.m_SvSuperjumpForce;
 				}
 			}
 		}

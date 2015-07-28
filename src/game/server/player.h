@@ -100,6 +100,8 @@ public:
 
 	bool m_Infected;
 	bool m_StartZombie;
+	int m_Kills;
+	bool m_HasSuperjump;
 
 private:
 	CCharacter *m_pCharacter;
