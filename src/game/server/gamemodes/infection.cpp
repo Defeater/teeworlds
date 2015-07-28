@@ -123,9 +123,23 @@ int CGameControllerINF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 					apEnts[i]->Infect(pVictim->GetPlayer()->GetCID(), ForceDir*Dmg*10);
 				}
 			}
-		}		
+		}
+
+		if(pVictim->GetPlayer() != pKiller)
+		{
+			pKiller->m_Score += 5;
+			pKiller->m_Kills++;
+
+		if(pKiller->m_Kills > 0 && pKiller->m_Kills % g_Config.m_SvSpecialWeaponKills == 0)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), g_Config.m_SvSpecialWeaponText, Server()->ClientName(pKiller->GetCID()));
+			GameServer()->SendChatTarget(-1, aBuf);
+			GameServer()->SendBroadcast("You earned airstrike & turret. CHOOSE!\nAirstrike:  -> Hammer || Turret:  -> Gun", pKiller->GetCID());
+			}
+		}
 	}
-	if(!pVictim->GetPlayer()->m_Infected)
+	else
 	{
 		pVictim->GetPlayer()->m_Kills = 0;
 		pVictim->GetPlayer()->m_Infected = true;

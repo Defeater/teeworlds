@@ -95,6 +95,8 @@ MACRO_CONFIG_INT(SvWallLength, sv_wall_length, 400, 100, 800, CFGFLAG_SERVER, "L
 MACRO_CONFIG_INT(SvSuperjumpKills, sv_superjump_kills, 2, 0, 10, CFGFLAG_SERVER, "Kills needed for an zombie-superjump")
 MACRO_CONFIG_STR(SvSuperjumpText, sv_superjump_text, 128, "%s mutated and can now superjump!", CFGFLAG_SERVER, "Text shown in text when a zombie gets ability for superjump")
 MACRO_CONFIG_INT(SvSuperjumpForce, sv_superjump_force, 40, 10, 100, CFGFLAG_SERVER, "Strength of superjump")
+MACRO_CONFIG_INT(SvSpecialWeaponKills, sv_special_kills, 5, 2, 10, CFGFLAG_SERVER, "Kills needed for special wepaons")
+MACRO_CONFIG_STR(SvSpecialWeaponText, sv_special_text, 128, "Red Alert. US Military gave %s special weapons!", CFGFLAG_SERVER, "Text shown in text when a player earns special weapons")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

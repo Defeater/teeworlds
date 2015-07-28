@@ -70,11 +70,14 @@ public:
 	void Infect(int From, vec2 Vel, bool Msg = true);
 	CWall *m_pWall;
 
+    int GetLastSpawn() { return m_LastSpawn; }
+
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
 
 	bool m_Alive;
+	int m_LastSpawn;
 
 	// weapon info
 	CEntity *m_apHitObjects[10];

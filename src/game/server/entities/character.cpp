@@ -8,6 +8,8 @@
 #include "character.h"
 #include "laser.h"
 #include "projectile.h"
+#include "airstrike.h"
+#include "turret.h"
 
 //input count
 struct CInputCount
@@ -94,6 +96,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	}
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
+	m_LastSpawn = Server()->Tick();
 
 	return true;
 }
@@ -342,6 +345,13 @@ void CCharacter::FireWeapon()
 
 			if(!m_pPlayer->m_Infected)
 			{
+				if(m_pPlayer->m_Kills >= g_Config.m_SvSpecialWeaponKills)
+				{
+					CAirstrike::CreateAirstrike(GameWorld(), m_Pos, m_pPlayer->GetCID());
+					m_pPlayer->m_Kills -= g_Config.m_SvSpecialWeaponKills;
+				}
+			else
+			{
 				m_Hammerhits++;
 
 				if(m_Hammerhits == 1)
@@ -359,8 +369,9 @@ void CCharacter::FireWeapon()
 						SecondSpot = m_FirstHit+Dir*g_Config.m_SvWallLength;
 					}
 
-					m_pWall = new CWall(GameWorld(), m_FirstHit, SecondSpot, m_pPlayer->GetCID());
-					m_Hammerhits = 0;
+						m_pWall = new CWall(GameWorld(), m_FirstHit, SecondSpot, m_pPlayer->GetCID());
+						m_Hammerhits = 0;
+					}
 				}
 			}
 
@@ -387,6 +398,14 @@ void CCharacter::FireWeapon()
 			Server()->SendMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 
 			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
+			if(!m_pPlayer->m_Infected)
+			{
+				if(m_pPlayer->m_Kills >= g_Config.m_SvSpecialWeaponKills)
+				{
+					new CTurret(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
+					m_pPlayer->m_Kills -= g_Config.m_SvSpecialWeaponKills;
+				}
+			}
 		} break;
 
 		case WEAPON_SHOTGUN:
