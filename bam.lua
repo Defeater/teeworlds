@@ -8,7 +8,7 @@ Import("other/freetype/freetype.lua")
 config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
-config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.6 -isysroot /Developer/SDKs/MacOSX10.6.sdk"))
+config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
@@ -120,11 +120,17 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 		os.exit(1)
 	end
 
-	settings.cc.flags:Add("-mmacosx-version-min=10.6")
-	settings.link.flags:Add("-mmacosx-version-min=10.6")
+	-- c++ stdlib needed 
+	settings.cc.flags:Add("--stdlib=libc++")
+	settings.link.flags:Add("--stdlib=libc++")
+	-- this also needs the macOS min SDK version to be at least 10.7
+
+	settings.cc.flags:Add("-mmacosx-version-min=10.7")
+	settings.link.flags:Add("-mmacosx-version-min=10.7")
+
 	if config.minmacosxsdk.value == 1 then
-		settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.6.sdk")
-		settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.6.sdk")
+		settings.cc.flags:Add("-isysroot /Developer/SDKs/MacOSX10.7.sdk")
+		settings.link.flags:Add("-isysroot /Developer/SDKs/MacOSX10.7.sdk")
 	end
 
 	settings.link.frameworks:Add("Carbon")
@@ -154,6 +160,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	settings.link.frameworks:Add("AGL")
 	-- FIXME: the SDL config is applied in BuildClient too but is needed here before so the launcher will compile
 	config.sdl:Apply(settings)
+	settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
 	BuildClient(settings)
 
 	-- Content
@@ -162,6 +169,7 @@ end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
+		settings.cc.flags:Add("-msse2") -- for the _mm_pause call
 		settings.cc.flags:Add("-m32")
 		settings.link.flags:Add("-m32")
 	elseif arch == "x86_64" then
@@ -209,7 +217,7 @@ end
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	if compiler == "cl" then
 		if (target_arch == "x86" and arch ~= "ia32") or
-		   (target_arch == "x86_64" and arch ~= "x64" and arch ~= "x86_64") then
+		   (target_arch == "x86_64" and arch ~= "ia64" and arch ~= "amd64") then
 			print("Cross compiling is unsupported on Windows.")
 			os.exit(1)
 		end
@@ -260,6 +268,12 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Content
 	BuildContent(settings)
+
+	-- dependencies
+	AddJob("other/sdl/include/SDL.h", "Downloading SDL2 headers and DLL...", dl .. " sdl SDL2.dll") -- TODO: split up dll and headers!
+	AddJob("other/freetype/include/ft2build.h", "Downloading freetype headers and DLL...", dl .. " freetype freetype.dll")
+	AddDependency(cur_builddir .. "/objs/engine/client/backend_sdl" .. settings.cc.extension, "other/sdl/include/SDL.h")
+	AddDependency(cur_builddir .. "/objs/engine/client/text" .. settings.cc.extension, "other/freetype/include/ft2build.h")
 end
 
 function SharedCommonFiles()
@@ -268,7 +282,7 @@ function SharedCommonFiles()
 	if not shared_common_files then
 		local network_source = ContentCompile("network_source", "generated/protocol.cpp")
 		local network_header = ContentCompile("network_header", "generated/protocol.h")
-		AddDependency(network_source, network_header)
+		AddDependency(network_source, network_header, "src/engine/shared/protocol.h")
 
 		local nethash = CHash("generated/nethash.cpp", "src/engine/shared/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 		shared_common_files = {network_source, nethash}
@@ -423,7 +437,7 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	return settings
 end
 
--- String formatting wth named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
+-- String formatting with named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
 function interp(s, tab)
 	return (s:gsub('%%%((%a%w*)%)([-0-9%.]*[cdeEfgGiouxXsq])',
 			function(k, fmt)
@@ -451,7 +465,7 @@ if ScriptArgs['arch'] then
 else
 	if arch == "ia32" then
 		archs = {"x86"}
-	elseif arch == "x64" or arch == "amd64" then
+	elseif arch == "ia64" or arch == "amd64" then
 		archs = {"x86_64"}
 	else
 		archs = {arch}
@@ -485,12 +499,19 @@ end
 for a, cur_arch in ipairs(archs) do
 	for c, cur_conf in ipairs(confs) do
 		cur_builddir = interp(builddir, {platform=family, arch=cur_arch, target=cur_target, conf=cur_conf, compiler=compiler})
+		if family == "windows" then
+			dl = Python("scripts/download.py")
+			dl = dl .. " --arch " .. cur_arch .. " --conf " .. cur_conf
+			AddJob(cur_builddir .. "/SDL2.dll", "Downloading SDL.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " SDL2.dll") -- TODO: Make me working!
+			AddJob(cur_builddir .. "/freetype.dll", "Downloading freetype.dll for " .. cur_arch .. "/" .. cur_conf, dl .. " freetype.dll")
+		end
 		local settings = GenerateSettings(cur_conf, cur_arch, cur_builddir, compiler)
 		for t, cur_target in pairs(targets) do
 			table.insert(subtargets[cur_target], PathJoin(cur_builddir, cur_target .. settings.link.extension))
 		end
 	end
 end
+
 for cur_name, cur_target in pairs(targets) do
 	-- Supertarget for all configurations and architectures of that target
 	PseudoTarget(cur_name, subtargets[cur_target])

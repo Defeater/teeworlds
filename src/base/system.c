@@ -60,7 +60,6 @@ static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
 
 static NETSTATS network_stats = {0};
-static MEMSTATS memory_stats = {0};
 
 static NETSOCKET invalid_socket = {NETTYPE_INVALID, -1, -1};
 
@@ -260,79 +259,13 @@ static const int MEM_GUARD_VAL = 0xbaadc0de;
 
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
-	/* TODO: fix alignment */
-	/* TODO: add debugging */
-	MEMTAIL *tail;
-	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
-	dbg_assert(header != 0, "mem_alloc failure");
-	if(!header)
-		return NULL;
-	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
-	header->size = size;
-	header->filename = filename;
-	header->line = line;
-
-	memory_stats.allocated += header->size;
-	memory_stats.total_allocations++;
-	memory_stats.active_allocations++;
-
-	tail->guard = MEM_GUARD_VAL;
-
-	header->prev = (MEMHEADER *)0;
-	header->next = first;
-	if(first)
-		first->prev = header;
-	first = header;
-
-	/*dbg_msg("mem", "++ %p", header+1); */
-	return header+1;
+	return malloc(size);
 }
 
 void mem_free(void *p)
 {
-	if(p)
-	{
-		MEMHEADER *header = (MEMHEADER *)p - 1;
-		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
-
-		if(tail->guard != MEM_GUARD_VAL)
-			dbg_msg("mem", "!! %p", p);
-		/* dbg_msg("mem", "-- %p", p); */
-		memory_stats.allocated -= header->size;
-		memory_stats.active_allocations--;
-
-		if(header->prev)
-			header->prev->next = header->next;
-		else
-			first = header->next;
-		if(header->next)
-			header->next->prev = header->prev;
-
-		free(header);
-	}
+	free(p);
 }
-
-void mem_debug_dump(IOHANDLE file)
-{
-	char buf[1024];
-	MEMHEADER *header = first;
-	if(!file)
-		file = io_open("memory.txt", IOFLAG_WRITE);
-
-	if(file)
-	{
-		while(header)
-		{
-			str_format(buf, sizeof(buf), "%s(%d): %d", header->filename, header->line, header->size);
-			io_write(file, buf, strlen(buf));
-			io_write_newline(file);
-			header = header->next;
-		}
-
-		io_close(file);
-	}
-}
-
 
 void mem_copy(void *dest, const void *source, unsigned size)
 {
@@ -469,14 +402,44 @@ int io_flush(IOHANDLE io)
 	return 0;
 }
 
+struct THREAD_RUN
+{
+	void (*threadfunc)(void *);
+	void *u;
+};
+
+#if defined(CONF_FAMILY_UNIX)
+static void *thread_run(void *user)
+#elif defined(CONF_FAMILY_WINDOWS)
+static unsigned long __stdcall thread_run(void *user)
+#else
+#error not implemented
+#endif
+{
+	struct THREAD_RUN *data = user;
+	void (*threadfunc)(void *) = data->threadfunc;
+	void *u = data->u;
+	free(data);
+	threadfunc(u);
+	return 0;
+}
+
 void *thread_init(void (*threadfunc)(void *), void *u)
 {
+	struct THREAD_RUN *data = malloc(sizeof(*data));
+	data->threadfunc = threadfunc;
+	data->u = u;
 #if defined(CONF_FAMILY_UNIX)
-	pthread_t id;
-	pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
-	return (void*)id;
+	{
+		pthread_t id;
+		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		{
+			return 0;
+		}
+		return (void*)id;
+	}
 #elif defined(CONF_FAMILY_WINDOWS)
-	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, u, 0, NULL);
+	return CreateThread(NULL, 0, thread_run, data, 0, NULL);
 #else
 	#error not implemented
 #endif
@@ -1476,19 +1439,46 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
-#if !defined(CONF_PLATFORM_MACOSX)
-	int i;
-#endif
 	if(!home)
 		return -1;
-
+	
 #if defined(CONF_PLATFORM_MACOSX)
 	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
-#else
+	return 0;
+#endif
+
+	int i;
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
+	/* old folder location */
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
-#endif
+
+	if(!xdgdatahome)
+	{
+		/* use default location */
+		snprintf(xdgpath, max, "%s/.local/share/%s", home, appname);
+		for(i = strlen(home)+14; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	else
+	{
+		snprintf(xdgpath, max, "%s/%s", xdgdatahome, appname);
+		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	
+	/* check for old location / backward compatibility */
+	if(fs_is_dir(path))
+	{
+		/* use old folder path */
+		/* for backward compatibility */
+		return 0;
+	}
+	
+	snprintf(path, max, "%s", xdgpath);
 
 	return 0;
 #endif
@@ -1668,6 +1658,18 @@ int time_houroftheday()
 	return time_info->tm_hour;
 }
 
+int time_isxmasday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	if(time_info->tm_mon == 11 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
+		return 1;
+	return 0;
+}
+
 void str_append(char *dst, const char *src, int dst_size)
 {
 	int s = strlen(dst);
@@ -1789,6 +1791,22 @@ void str_sanitize(char *str_in)
 			*str = ' ';
 		str++;
 	}
+}
+
+/* removes all forbidden windows/unix characters in filenames*/
+char* str_sanitize_filename(char* aName)
+{
+	char *str = (char *)aName;
+	while(*str)
+	{
+		// replace forbidden characters with a whispace
+		if(*str == '/' || *str == '<' || *str == '>' || *str == ':' || *str == '"' 
+			|| *str == '/' || *str == '\\' || *str == '|' || *str == '?' || *str == '*')
+ 			*str = ' ';
+		str++;
+	}
+	str_clean_whitespaces(aName);
+	return aName;
 }
 
 /* removes leading and trailing spaces and limits the use of multiple spaces */
@@ -1964,11 +1982,6 @@ void str_timestamp(char *buffer, int buffer_size)
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);
-}
-
-const MEMSTATS *mem_stats()
-{
-	return &memory_stats;
 }
 
 void net_stats(NETSTATS *stats_inout)
@@ -2189,7 +2202,7 @@ int secure_random_init()
 		return 0;
 	}
 #if defined(CONF_FAMILY_WINDOWS)
-	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, 0))
+	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
 	{
 		secure_random_data.initialized = 1;
 		return 0;

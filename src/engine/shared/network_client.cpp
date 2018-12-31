@@ -90,25 +90,18 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 			}
 			else
 			{
-				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data, true);
+				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data);
 				if(!Accept)
 					continue;
 
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 				{
 					if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-						m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken);
+						m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_ALLOWBROADCAST|NET_TOKENFLAG_RESPONSEONLY);
 				}
-				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
+				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS && Accept != -1)
 				{
 					pChunk->m_Flags = NETSENDFLAG_CONNLESS;
-
-					if(Accept < 0)
-					{
-						if(!(m_Flags&NETCREATE_FLAG_ALLOWSTATELESS))
-							continue;
-						pChunk->m_Flags |= NETSENDFLAG_STATELESS;
-					}
 					pChunk->m_ClientID = -1;
 					pChunk->m_Address = Addr;
 					pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
@@ -124,7 +117,7 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 	return 0;
 }
 
-int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
+int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, CSendCBData *pCallbackData)
 {
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
@@ -137,25 +130,19 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
 		if(pChunk->m_ClientID == -1 && net_addr_comp(&pChunk->m_Address, m_Connection.PeerAddress()) == 0)
 		{
 			// upgrade the packet, now that we know its recipent
-			pChunk->m_Flags &= ~NETSENDFLAG_STATELESS;
 			pChunk->m_ClientID = 0;
 		}
 
 
-		if(pChunk->m_Flags&NETSENDFLAG_STATELESS || Token != NET_TOKEN_NONE)
+		if(Token != NET_TOKEN_NONE)
 		{
-			if(pChunk->m_Flags&NETSENDFLAG_STATELESS)
-			{
-				dbg_assert(pChunk->m_ClientID == -1, "errornous client id, connless packets can only be sent to cid=-1");
-				dbg_assert(Token == NET_TOKEN_NONE, "stateless packets can't have a token");
-			}
 			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 		}
 		else
 		{
 			if(pChunk->m_ClientID == -1)
 			{
-				m_TokenCache.SendPacketConnless(&pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize);
+				m_TokenCache.SendPacketConnless(&pChunk->m_Address, pChunk->m_pData, pChunk->m_DataSize, pCallbackData);
 			}
 			else
 			{
@@ -184,6 +171,11 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token)
 			m_Connection.Flush();
 	}
 	return 0;
+}
+
+void CNetClient::PurgeStoredPacket(int TrackID)
+{
+	m_TokenCache.PurgeStoredPacket(TrackID);
 }
 
 int CNetClient::State() const

@@ -56,10 +56,11 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
+	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-
+	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
@@ -86,7 +87,7 @@ public:
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
 	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
-	
+
 	bool m_SuppressEvents;
 
 	// TODO: move this
@@ -128,7 +129,7 @@ public:
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
 		int m_GameDataFlagSnapID;
-		
+
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
@@ -186,13 +187,16 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
-		void Reset(CGameClient *pGameClient);
+		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo);
+		void Reset(CGameClient *pGameClient, int CLientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
+	bool m_MuteServerBroadcast;
+	float m_TeamChangeTime;
+	bool m_IsXmasDay;
 
 	struct CGameInfo
 	{
@@ -245,7 +249,10 @@ public:
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	virtual int ClientVersion() const;
 	const char *GetTeamName(int Team, bool Teamplay) const;
+	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
+	bool IsXmas() const;
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);

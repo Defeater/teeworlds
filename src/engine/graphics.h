@@ -69,6 +69,9 @@ public:
 		TEXLOAD_NOMIPMAPS = 2,
 		TEXLOAD_ARRAY_256 = 4,
 		TEXLOAD_MULTI_DIMENSION = 8,
+		TEXLOAD_LINEARMIPMAPS = 16,
+
+		NUMTILES_DIMENSION = 16,			// number of tiles in each dimension within a texture
 	};
 
 	/* Constants: Wrap Modes */
@@ -95,6 +98,9 @@ public:
 	int ScreenWidth() const { return m_ScreenWidth; }
 	int ScreenHeight() const { return m_ScreenHeight; }
 	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
+	int DesktopWidth() const { return m_DesktopScreenWidth; }
+	int DesktopHeight() const { return m_DesktopScreenHeight; }
+	float DesktopAspect() const { return m_DesktopScreenWidth/(float)m_DesktopScreenHeight; }
 
 	virtual void Clear(float r, float g, float b) = 0;
 
@@ -177,7 +183,7 @@ public:
 
 	virtual void Swap() = 0;
 	virtual int GetNumScreens() const = 0;
-	
+
 
 	// syncronization
 	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
@@ -214,7 +220,7 @@ public:
 
 };
 
-extern IEngineGraphics *CreateEngineGraphics();
+extern IEngineGraphics *CreateEngineGraphics(); // NOTE: not used
 extern IEngineGraphics *CreateEngineGraphicsThreaded();
 
 #endif
