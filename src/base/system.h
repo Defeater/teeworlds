@@ -213,6 +213,21 @@ IOHANDLE io_open(const char *filename, int flags);
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 
 /*
+	Function: io_unread_byte
+		"Unreads" a single byte, making it available for future read
+		operations.
+
+	Parameters:
+		io - Handle to the file to unread the byte from.
+		byte - Byte to unread.
+
+	Returns:
+		Returns 0 on success and 1 on failure.
+
+*/
+unsigned io_unread_byte(IOHANDLE io, unsigned char byte);
+
+/*
 	Function: io_skip
 		Skips data in a file.
 
@@ -389,6 +404,12 @@ void thread_yield();
 		thread - Thread to detach
 */
 void thread_detach(void *thread);
+
+/*
+	Function: cpu_relax
+		Lets the cpu relax a bit.
+*/
+void cpu_relax();
 
 /* Group: Locks */
 typedef void* LOCK;
