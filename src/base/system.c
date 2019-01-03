@@ -44,6 +44,10 @@
 	#error NOT IMPLEMENTED
 #endif
 
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	#include <immintrin.h> //_mm_pause
+#endif
+
 #if defined(CONF_PLATFORM_SOLARIS)
 	#include <sys/filio.h>
 #endif
@@ -334,6 +338,11 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
+{
+	return ungetc(byte, (FILE*)io) == EOF;
+}
+
 unsigned io_skip(IOHANDLE io, int size)
 {
 	fseek((FILE*)io, size, SEEK_CUR);
@@ -499,6 +508,14 @@ void thread_detach(void *thread)
 #endif
 }
 
+void cpu_relax()
+{
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	_mm_pause();
+#else
+	(void) 0;
+#endif
+}
 
 
 
@@ -1439,6 +1456,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
+	int i;
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
 	if(!home)
 		return -1;
 	
@@ -1447,10 +1468,6 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #endif
 
-	int i;
-	char *xdgdatahome = getenv("XDG_DATA_HOME");
-	char xdgpath[max];
-	
 	/* old folder location */
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
