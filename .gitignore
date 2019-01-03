@@ -14,3 +14,5 @@ scripts/work/
 other/freetype
 other/sdl
 _test.exe
+*.exe
+*.bat
