@@ -1377,7 +1377,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			if(m_ActivePage != PAGE_GAME)
             {
                 CUIRect ButtonBar;
-                if(m_ActivePage == PAGE_CALLVOTE)
+                if(m_ActivePage == PAGE_CALLVOTE || m_ActivePage ==  PAGE_INGAME_BROWSER)
                 {
                     Rect.HSplitTop(28.0f, &ButtonBar, &Rect);
                     RenderTools()->DrawUIRect(&ButtonBar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 10.0f);
@@ -1405,8 +1405,13 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 			Box.VSplitLeft(130.0f, &Button, &Box);
 			static CButtonContainer s_CallVoteButton;
-			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_TR))
+			if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, 0))
 				NewPage = PAGE_CALLVOTE;
+
+            Box.VSplitLeft(90.0f, &Button, &Box);
+			static CButtonContainer s_BrowserButton;
+			if(DoButton_MenuTab(&s_BrowserButton, Localize("Browser"), m_ActivePage==PAGE_INGAME_BROWSER, &Button, CUI::CORNER_TR))
+				NewPage = PAGE_INGAME_BROWSER;
 
             Box.VSplitRight(90.0f, &Box, &Button);
 			static CButtonContainer s_BlaButton;
@@ -1837,7 +1842,7 @@ int CMenus::Render()
 			float BarHeight = 60.0f;
 			if(Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS)
 				BarHeight += 3.0f + 25.0f;
-			Screen.VMargin(Screen.w/2-365.0f, &MainView);
+			Screen.VMargin(Screen.w/2-400.0f, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
@@ -1881,6 +1886,8 @@ int CMenus::Render()
 					RenderServerInfo(MainView);
 				else if(m_GamePage == PAGE_CALLVOTE)
 					RenderServerControl(MainView);
+                else if(m_GamePage == PAGE_INGAME_BROWSER)
+				    RenderInGameServerBrowser(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
 					RenderSettings(MainView);
                 else if(m_GamePage == PAGE_BLA)

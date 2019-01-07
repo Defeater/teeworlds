@@ -172,6 +172,8 @@ private:
 		PAGE_START,
 		PAGE_BLA,
 
+		PAGE_INGAME_BROWSER=0,
+
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,
@@ -549,6 +551,7 @@ private:
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView, bool FilterSpectators);
 	bool RenderServerControlServer(CUIRect MainView);
+    void RenderInGameServerBrowser(CUIRect MainView);
 
 	// found in menus_browser.cpp
 	// int m_ScrollOffset;

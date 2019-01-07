@@ -82,7 +82,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	ButtonBar.HSplitTop(25.0f, &ButtonBar, 0);
 	ButtonBar.VMargin(10.0f, &ButtonBar);
 
-	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+	ButtonBar.VSplitRight(150.0f, &ButtonBar, &Button);
 	static CButtonContainer s_DisconnectButton;
 	if(DoButton_MenuTabTop(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
 		Client()->Disconnect();
@@ -434,6 +434,38 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Motd.Margin(5.0f, &Motd);
 
 	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), (int)Motd.w);
+}
+
+
+void CMenus::RenderInGameServerBrowser(CUIRect MainView)
+{
+    static int s_ControlPage = 0;
+	// tab bar
+	const float NotActiveAlpha = 0.5f;
+	CUIRect Bottom, Extended, Button, Row, Note;
+	MainView.HSplitTop(3.0f, 0, &MainView);
+	MainView.HSplitTop(25.0f, &Row, &MainView);
+	Row.VSplitLeft(Row.w/3-1.5f, &Button, &Row);
+	static CButtonContainer s_Button0;
+	if(DoButton_MenuTabTop(&s_Button0, Localize("Global"), false, &Button, s_ControlPage == 0 ? 1.0f : NotActiveAlpha, 1.0f, CUI::CORNER_T, 5.0f, 0.25f))
+    {
+        ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
+        g_Config.m_UiBrowserPage = PAGE_INTERNET;
+        s_ControlPage = 0;
+    }
+
+	Row.VSplitLeft(1.5f, 0, &Row);
+	Row.VSplitMid(&Button, &Row);
+	Button.VMargin(1.5f, &Button);
+	static CButtonContainer s_Button1;
+	if(DoButton_MenuTabTop(&s_Button1, Localize("LAN"), false, &Button, s_ControlPage == 1 ? 1.0f : NotActiveAlpha, 1.0f, CUI::CORNER_T, 5.0f, 0.25f))
+    {
+        ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
+        g_Config.m_UiBrowserPage = PAGE_LAN;
+        s_ControlPage = 1;
+    }
+
+	RenderServerbrowser(MainView);
 }
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)
