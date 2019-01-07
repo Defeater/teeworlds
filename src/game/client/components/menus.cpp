@@ -1331,6 +1331,7 @@ void CMenus::RenderLoading()
 
 	static int64 LastLoadRender = 0;
 	float Percent = m_LoadCurrent++/(float)m_LoadTotal;
+	float tw;
 
 	// make sure that we don't render for each little thing we load
 	// because that will slow down loading if we have vsync
@@ -1353,19 +1354,74 @@ void CMenus::RenderLoading()
 	Graphics()->BlendNormal();
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
-	const char *pCaption = Localize("Loading");
+	char pCaption[25];
+	char aLoading[20];
+	str_format(aLoading, sizeof(aLoading), Localize("Loading"));
+	if(m_LoadCurrent < 0.25 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s   ", aLoading);
+	else if(m_LoadCurrent > 0.25 * m_LoadTotal && m_LoadCurrent < 0.50 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s.  ", aLoading);
+	else if(m_LoadCurrent > 0.50 * m_LoadTotal && m_LoadCurrent < 0.75 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s.. ", aLoading);
+	else if(m_LoadCurrent > 0.75 * m_LoadTotal)
+		str_format(pCaption, sizeof(pCaption), "%s...", aLoading);
+    float percent = (m_LoadCurrent*100.0f)/(float)m_LoadTotal;
 
 	Rect.x = x;
-	Rect.y = y+20;
+	Rect.y = y+10;
 	Rect.w = w;
 	Rect.h = h;
-	UI()->DoLabel(&Rect, pCaption, 48.0f, CUI::ALIGN_CENTER);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&Rect, pCaption, 48.0f, CUI::ALIGN_CENTER);
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	Rect.x = x+40.0f;
 	Rect.y = y+h-75.0f;
 	Rect.w = (w-80.0f)*Percent;
 	Rect.h = 25.0f;
 	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f), 5.0f);
+
+    char aBuf[50];
+    str_format(aBuf, sizeof(aBuf), "%.2f%c", percent, '%');
+    float perLen = TextRender()->TextWidth(0, 16.0f, aBuf, str_length(aBuf));
+    Rect.x = x-perLen/2;
+    Rect.y = y+h-70;
+    Rect.w = w;
+    Rect.h = 20;
+    TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+    UI()->DoLabelScaled(&Rect, aBuf, 16.0f, CUI::ALIGN_CENTER);
+
+    tw = TextRender()->TextWidth(0, 48.0f, pCaption, -1);
+	const char *pVersion = "Bla v"BLA_VERSION;
+	const char *pDate = "Release date: "__DATE__;
+	tw = TextRender()->TextWidth(0, 14.0f, pDate, -1);
+	Rect.x = Screen.w - 15;
+	Rect.y = Screen.h - 20;
+	Rect.w = 0;//50;
+	Rect.h = 0;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&Rect, pDate, 14.0f, CUI::ALIGN_RIGHT); // Align == 1 -> text align from the right
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	tw = TextRender()->TextWidth(0, 14.0f, pVersion, -1);
+	Rect.x = Screen.w - 15;
+	Rect.y = Screen.h - 20 - 20;
+	Rect.w = 0;
+	Rect.h = 0;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    UI()->DoLabel(&Rect, pVersion, 14.0f, CUI::ALIGN_RIGHT); // Align == 1 -> text align from the right
+    TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    m_TextureLogo = Graphics()->LoadTexture("logo.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+    Graphics()->TextureSet(m_TextureLogo);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(1,1,1,0.3f);
+    IGraphics::CQuadItem QuadItem(Screen.x, y-200, 285.0, h);
+    Graphics()->QuadsDrawTL(&QuadItem, 1);
+    Graphics()->SetColor(1,1,1,1);
+    Graphics()->QuadsSetSubset(0, 0, Percent, 1);
+    QuadItem = IGraphics::CQuadItem(Screen.x, y-200, 285.0 * Percent, h);
+    Graphics()->QuadsDrawTL(&QuadItem, 1);
+    Graphics()->QuadsEnd();
 
 	Graphics()->Swap();
 }

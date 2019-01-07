@@ -590,6 +590,7 @@ private:
 	void DoPopupMenu();
 
 	IGraphics::CTextureHandle m_TextureBlob;
+	IGraphics::CTextureHandle m_TextureLogo;
 
 	void ToggleMusic();
 
