@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
+#include <stdio.h>
 
 #include <engine/config.h>
 #include <engine/demo.h>
@@ -155,10 +156,20 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	// Record button
 	ButtonBar.VSplitRight(100.0f, &ButtonBar, 0);
-	ButtonBar.VSplitRight(150.0f, &ButtonBar, &Button);
+	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+    static CButtonContainer s_TestButton;
+	if(DoButton_MenuTabTop(&s_TestButton, Localize("LAN Test"), 0, &Button))
+	{
+		TestMap();
+		Client()->Connect("127.0.0.1:8303");
+		Client()->SendInitialRconPassword("default");
+	}
+	ButtonBar.VSplitRight(100.0f, &ButtonBar, 0);
+	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+
 	static CButtonContainer s_DemoButton;
 	bool Recording = DemoRecorder()->IsRecording();
-	if(DoButton_MenuTabTop(&s_DemoButton, Localize(Recording ? "Stop" : "Record"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
+	if(DoButton_MenuTabTop(&s_DemoButton, Localize(Recording ? "Stop" : "Record"), 0, &Button))
 	{
 		if(!Recording)
 			Client()->DemoRecorder_Start("demo", true);
@@ -789,4 +800,100 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 	}
 }
+
+void CMenus::TestMap()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	FILE *pFile;
+	char aServerExe[512], aCfgGametype[512];
+	char aBuf[1024];
+	int Crc;
+	int IsInLocalFolder;
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+	char aGametype[64], aMapName[128];
+	str_copy(aGametype, CurrentServerInfo.m_aGameType, sizeof(aGametype));
+	str_copy(aMapName, CurrentServerInfo.m_aMap, sizeof(aMapName));
+	if(!str_comp(aGametype, "DM") || !str_comp(aGametype, "TDM") || !str_comp(aGametype, "CTF"))
+	{
+		str_copy(aServerExe, "teeworlds_srv.exe", sizeof(aServerExe));
+		if(!str_comp(aGametype, "CTF"))
+			str_copy(aCfgGametype, "ctf", sizeof(aCfgGametype));
+		else str_copy(aCfgGametype, "dm", sizeof(aCfgGametype));
+	}
+	else // Try with custom binaries
+	{
+		int i = 0;
+		 // Removes weird character and replaces them with whitespaces
+		str_sanitize_strong(aGametype);
+		// Now let's replace whitespaces with _
+		while(aGametype[i])
+		{
+			if(aGametype[i] == ' ')
+				aGametype[i] = '_';
+			i++;
+		}
+		str_format(aServerExe, sizeof(aServerExe), "teeworlds_srv_%s.exe", aGametype);
+		str_copy(aCfgGametype, aGametype, sizeof(aCfgGametype));
+	}
+	/* First, try to open the right .exe */
+	str_format(aBuf, sizeof(aBuf), "Trying to open %s", aServerExe);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "servercreation", aBuf);
+		pFile = fopen(aServerExe, "r");
+		if(!pFile)
+		{
+			str_copy(aServerExe, "teeworlds_srv.exe", sizeof(aServerExe)); // Finally, use the pure server
+			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "servercreation", "Failed, trying with the pure");
+		}
+		else
+			fclose(pFile);
+	pFile = fopen("server/map_test.cfg", "w+");
+	if(!pFile)
+	{
+		system("md server");
+		pFile = fopen("server/map_test.cfg", "w+");
+		if(!pFile) // Critical error : denying access
+			return;
+	}
+	fprintf(pFile, "sv_name [%s] %s's test server\n", g_Config.m_PlayerClan, g_Config.m_PlayerName);
+	fprintf(pFile, "sv_rcon_password default\nsv_gametype %s\nsv_scorelimit 0\nsv_timelimit 0\nsv_infinite_ammo 1\n", aCfgGametype);
+	fprintf(pFile, "sv_map %s\nsv_register 1\nsv_port 8303\n", aMapName);
+	fclose(pFile);
+	// Generating the crc
+	Crc = Client()->GetCurrentMapCrc();
+	IsInLocalFolder = 0;
+	char aOldPath[1024], aNewPath[1024], aAppPath[1024];
+	// We must copy the map in the right folder
+	str_format(aBuf, sizeof(aBuf), "data/maps/%s.map", aMapName);
+	str_copy(aAppPath, ClientUserDirectory(), sizeof(aAppPath));
+	pFile = fopen(aBuf, "r");
+	if(pFile)
+	{
+		fclose(pFile);
+		IsInLocalFolder = 1;
+	}
+	else
+	{
+		str_format(aBuf, sizeof(aBuf), "%s\\maps\\%s.map", aAppPath, aMapName);
+		pFile = fopen(aBuf, "r");
+		if(pFile)
+		{
+			fclose(pFile);
+			IsInLocalFolder = 2;
+		}
+	}
+	if(IsInLocalFolder == 1)
+		str_format(aOldPath, sizeof(aOldPath), "data\\maps\\%s.map", aMapName);
+	else if(IsInLocalFolder == 2)
+		str_format(aOldPath, sizeof(aOldPath), "%s\\maps\\%s.map", aAppPath, aMapName);
+	else
+		str_format(aOldPath, sizeof(aOldPath), "%s\\downloadedmaps\\%s_%08x.map", aAppPath, aMapName, Crc);
+	str_format(aNewPath, sizeof(aNewPath), "%s\\maps\\%s.map", aAppPath, aMapName);
+	str_format(aBuf, sizeof(aBuf), "copy \"%s\" \"%s\"", aOldPath, aNewPath);
+	system(aBuf);
+	system("taskkill /F /IM teeworlds_srv.exe");
+	str_format(aBuf, sizeof(aBuf), "start %s -f server\\map_test.cfg", aServerExe);
+	system(aBuf);
+}
+#endif
 

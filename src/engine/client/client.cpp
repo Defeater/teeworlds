@@ -267,6 +267,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_AckGameTick = -1;
 	m_CurrentRecvTick = 0;
 	m_RconAuthed = 0;
+	m_aServerRconPassword[0] = 0;
 
 	// version-checking
 	m_aVersionStr[0] = '0';
@@ -352,6 +353,12 @@ void CClient::SendReady()
 {
 	CMsgPacker Msg(NETMSG_READY, true);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+	if(m_aServerRconPassword[0]) // Sending initial rcons if any
+	{
+		RconAuth("", m_aServerRconPassword);
+		m_aServerRconPassword[0] = 0;
+	}
 }
 
 void CClient::RconAuth(const char *pName, const char *pPassword)
@@ -2166,6 +2173,15 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 	pSelf->RconAuth("", pResult->GetString(0));
 }
 
+const char* CClient::GetCurrentMap()
+{
+	return m_aCurrentMap;
+}
+int CClient::GetCurrentMapCrc()
+{
+	return m_CurrentMapCrc;
+}
+
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;
@@ -2410,6 +2426,13 @@ void CClient::RegisterCommands()
 	m_pConsole->Chain("gfx_fullscreen", ConchainFullscreen, this);
 	m_pConsole->Chain("gfx_borderless", ConchainWindowBordered, this);
 	m_pConsole->Chain("gfx_vsync", ConchainWindowVSync, this);
+}
+
+const char *ClientUserDirectory()
+{
+	static char Path[1024] = {0};
+	fs_storage_path("Teeworlds", Path, sizeof(Path));
+	return Path;
 }
 
 static CClient *CreateClient()

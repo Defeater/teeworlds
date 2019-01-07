@@ -79,6 +79,7 @@ public:
 	// actions
 	virtual void Connect(const char *pAddress) = 0;
 	virtual void Disconnect() = 0;
+	virtual void SendInitialRconPassword(const char* aPassword) = 0;
 	virtual void Quit() = 0;
 	virtual const char *DemoPlayer_Play(const char *pFilename, int StorageType) = 0;
 	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
@@ -87,7 +88,7 @@ public:
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
-	
+
 	// gfx
 	virtual void SwitchWindowScreen(int Index) = 0;
 	virtual void ToggleFullscreen() = 0;
@@ -127,7 +128,7 @@ public:
 	virtual const void *SnapFindItem(int SnapID, int Type, int ID) const = 0;
 	virtual const void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const = 0;
 	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
-	
+
 	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
@@ -149,6 +150,9 @@ public:
 	virtual bool ConnectionProblems() const = 0;
 
 	virtual bool SoundInitFailed() const = 0;
+
+	virtual const char* GetCurrentMap() = 0;
+	virtual int GetCurrentMapCrc() = 0;
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
 };
@@ -184,4 +188,5 @@ public:
 };
 
 extern IGameClient *CreateGameClient();
+const char *ClientUserDirectory();
 #endif
