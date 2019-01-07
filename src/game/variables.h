@@ -130,7 +130,9 @@ MACRO_CONFIG_INT(SvVoteKickMin, sv_vote_kick_min, 0, 0, MAX_CLIENTS, CFGFLAG_SAV
 MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 5, 0, 1440, CFGFLAG_SAVE|CFGFLAG_SERVER, "The time to ban a player if kicked by vote. 0 makes it just use kick")
 
 //Bla stuff
-MACRO_CONFIG_INT(Bdadash, cl_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable pew pew?")
+MACRO_CONFIG_INT(Bdadash, bla_bdadash, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable pew pew?")
+MACRO_CONFIG_INT(Blood, bla_blood, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod")
+MACRO_CONFIG_INT(BloodDamage, bla_blood_damage, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Simple bloodmod damage")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly
