@@ -19,7 +19,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 60, 280, 70);
+	IGraphics::CQuadItem QuadItem(MainView.w/2-140, 10, 280, 70);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -35,10 +35,16 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	int NewPage = -1;
 
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
+	static CButtonContainer s_BlaButton;
+	if(DoButton_Menu(&s_BlaButton, Localize("Bla"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "bla" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
+		NewPage = PAGE_BLA;
+    TopMenu.HSplitBottom(30.0f, &TopMenu, 0); // little space
+
+	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_SettingsButton;
 	if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "settings" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
 		NewPage = PAGE_SETTINGS;
-	
+
 	/*TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Bottom);
 	static int s_LocalServerButton = 0;
@@ -79,7 +85,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	static CButtonContainer s_PlayButton;
 	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "play_game" : 0, CUI::CORNER_ALL, 10.0f, 0.5f) || m_EnterPressed)
 		NewPage = g_Config.m_UiBrowserPage;
-	
+
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
 	RenderTools()->DrawUIRect4(&BottomMenu, vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.25f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 10.0f);
 
@@ -108,5 +114,5 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 void CMenus::RenderLogo(CUIRect MainView)
 {
-	
+
 }

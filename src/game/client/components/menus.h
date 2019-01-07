@@ -170,6 +170,7 @@ private:
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
 		PAGE_START,
+		PAGE_BLA,
 
 		SETTINGS_GENERAL=0,
 		SETTINGS_PLAYER,
@@ -181,6 +182,13 @@ private:
 		ACTLB_NONE=0,
 		ACTLB_LANG,
 		ACTLB_THEME,
+
+        BLA_SETTINGS_GENERAL=0,
+		BLA_SETTINGS_EXTRAS,
+		BLA_SETTINGS_HUD,
+		BLA_SETTINGS_DUMMY,
+		BLA_SETTINGS_TEXTURE,
+		BLA_SETTINGS_INFO,
 	};
 
 	int m_GamePage;
@@ -356,7 +364,7 @@ private:
 			int Result = str_comp_nocase(m_aName, Other.m_aName);
 			if(Result < 0 || (Result == 0 && str_comp_nocase(m_aClan, Other.m_aClan) < 0))
 				return true;
-			
+
 			return false;
 		}
 	};
@@ -519,6 +527,15 @@ private:
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
+
+    // found in menus_bla.cpp
+	void RenderBlaSettingsGeneral(CUIRect MainView);
+	void RenderBlaSettingsExtras(CUIRect MainView);
+	void RenderBlaSettingsHud(CUIRect MainView);
+	void RenderBlaSettingsDummy(CUIRect MainView);
+	void RenderBlaSettingsTexture(CUIRect MainView);
+	void RenderBlaSettingsInfo(CUIRect MainView);
+ 	void RenderBla(CUIRect MainView);
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);

@@ -53,155 +53,117 @@ void CMenus::RenderGame(CUIRect MainView)
 		return;
 
 	char aBuf[128];
-	CSwitchTeamInfo Info = { 0 };
-	GetSwitchTeamInfo(&Info);
-	CUIRect Button, ButtonRow, Label;
+	const char *pNotification = 0;
+	int TeamMod = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS ? -1 : 0;
+	bool AllowSpec = true;
+	int TimeLeft = 0;
 
-	float Spacing = 3.0f;
-	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-	
-	// cut view
-	MainView.HSplitTop(20.0f, 0, &MainView);
-	float NoteHeight = !Info.m_aNotification[0] ? 0.0f : 45.0f;
-	MainView.HSplitTop(20.0f+20.0f+2*Spacing+ NoteHeight, &MainView, 0);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
-
-	// game options
-	MainView.HSplitTop(20.0f, &Label, &MainView);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Game options"), 20.0f*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	if(Info.m_aNotification[0] != 0)
+	if(TeamMod+m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]+m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE] >= m_pClient->m_ServerSettings.m_PlayerSlots)
 	{
-		// print notice
-		CUIRect Bar;
-		MainView.HSplitBottom(NoteHeight, &MainView, &Bar);
-		Bar.HMargin(15.0f, &Bar);
-		UI()->DoLabelScaled(&Bar, Info.m_aNotification, 14.0f, CUI::ALIGN_CENTER);
+		str_format(aBuf, sizeof(aBuf), Localize("Only %d active players are allowed"), m_pClient->m_ServerSettings.m_PlayerSlots);
+		pNotification = aBuf;
+	}
+	else if(m_pClient->m_ServerSettings.m_TeamLock)
+		pNotification = Localize("Teams are locked");
+	else if(m_pClient->m_TeamCooldownTick+1 >= Client()->GameTick())
+	{
+		TimeLeft = (m_pClient->m_TeamCooldownTick-Client()->GameTick())/Client()->GameTickSpeed()+1;
+		str_format(aBuf, sizeof(aBuf), Localize("Teams are locked. Time to wait before changing team: %02d:%02d"), TimeLeft/60, TimeLeft%60);
+		pNotification = aBuf;
+		AllowSpec = false;
 	}
 
-	// buttons
+	CUIRect Button, ButtonBar;
+	MainView.HSplitTop(45.0f, &ButtonBar, &MainView);
+	RenderTools()->DrawUIRect(&ButtonBar, vec4(0.0f, 0.0f, 0.0f, 0.25f), pNotification!=0?CUI::CORNER_T:CUI::CORNER_ALL, 10.0f);
+
+	// button bar
+	ButtonBar.HSplitTop(10.0f, 0, &ButtonBar);
+	ButtonBar.HSplitTop(25.0f, &ButtonBar, 0);
+	ButtonBar.VMargin(10.0f, &ButtonBar);
+
+	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+	static CButtonContainer s_DisconnectButton;
+	if(DoButton_MenuTabTop(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
+		Client()->Disconnect();
+
+	if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS && AllowSpec)
 	{
-		MainView.HSplitTop(Spacing, 0, &MainView);
-		MainView.HSplitTop(20.0f, &ButtonRow, 0);
-		ButtonRow.VMargin(Spacing, &ButtonRow);
-
-		// specator button
-		int Team = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team;
-		if(!Info.m_AllowSpec && Team != TEAM_SPECTATORS)
-		{
-			if(Info.m_TimeLeft)
-				str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
-			else
-				str_copy(aBuf, Localize("locked"), sizeof(aBuf));
-		}
-		else
-			str_copy(aBuf, Localize(Team != TEAM_SPECTATORS ? "Spectate" : "Spectating"), sizeof(aBuf)); // Localize("Spectating");
-
-		ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
-		ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
+		ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
 		static CButtonContainer s_SpectateButton;
-		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec)
+		if(DoButton_MenuTabTop(&s_SpectateButton, Localize("Spectate"), 0, &Button))
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 			SetActive(false);
 		}
+    }
 
-		// team button
+	if(pNotification != 0)
+	{
+		// print notice
+		CUIRect Bar;
+		MainView.HSplitTop(45.0f, &Bar, &MainView);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 10.0f);
+		Bar.HMargin(15.0f, &Bar);
+		UI()->DoLabelScaled(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
+	}
+	else
+	{
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			int RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
-			if(Team != TEAM_RED)
-				++RedTeamSizeNew;
-			int BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
-			if(Team == TEAM_BLUE)
-				--BlueTeamSizeNew;
-			bool BlockRed = m_pClient->m_ServerSettings.m_TeamBalance && (RedTeamSizeNew - BlueTeamSizeNew >= NUM_TEAMS);
-			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed)
+			if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_RED &&
+				absolute((m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]+1)-(m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]+TeamMod)) < NUM_TEAMS)
 			{
-				if(Info.m_TimeLeft)
-					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
-				else
-					str_copy(aBuf, Localize("locked"), sizeof(aBuf));
+				ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
+				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
+				static CButtonContainer s_SpectateButton;
+				if(DoButton_MenuTabTop(&s_SpectateButton, Localize("Join red"), 0, &Button))
+				{
+					m_pClient->SendSwitchTeam(TEAM_RED);
+					SetActive(false);
+				}
 			}
-			else
-				str_copy(aBuf, Localize(Team != TEAM_RED ? "Join red" : "Joined red"), sizeof(aBuf)); // Localize("Join red");Localize("Joined red");
-
-			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
-			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
-			static CButtonContainer s_RedButton;
-			if(DoButton_Menu(&s_RedButton, aBuf, Team == TEAM_RED, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.975f, 0.17f, 0.17f, 0.75f), false) && Team != TEAM_RED && !(Info.m_aNotification[0]) && !BlockRed)
+			if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_BLUE &&
+				absolute((m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]+TeamMod)-(m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]+1)) < NUM_TEAMS)
 			{
-				m_pClient->SendSwitchTeam(TEAM_RED);
-				SetActive(false);
-			}
-
-			RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
-			if(Team == TEAM_RED)
-				--RedTeamSizeNew;
-			BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
-			if(Team != TEAM_BLUE)
-				++BlueTeamSizeNew;
-			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
-			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue)
-			{
-				if(Info.m_TimeLeft)
-					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
-				else
-					str_copy(aBuf, Localize("locked"), sizeof(aBuf));
-			}
-			else
-				str_copy(aBuf, Localize(Team != TEAM_BLUE ? "Join blue" : "Joined blue"), sizeof(aBuf)); // Localize("Join blue");Localize("Joined blue");
-
-			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
-			ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
-			static CButtonContainer s_BlueButton;
-			if(DoButton_Menu(&s_BlueButton, aBuf, Team == TEAM_BLUE, &Button, 0, CUI::CORNER_ALL, 5.0f, 0.0f, vec4(0.17f, 0.46f, 0.975f, 0.75f), false) && Team != TEAM_BLUE && !(Info.m_aNotification[0]) && !BlockBlue)
-			{
-				m_pClient->SendSwitchTeam(TEAM_BLUE);
-				SetActive(false);
+			    ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
+				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
+				static CButtonContainer s_SpectateButton;
+				if(DoButton_MenuTabTop(&s_SpectateButton, Localize("Join blue"), 0, &Button))
+				{
+					m_pClient->SendSwitchTeam(TEAM_BLUE);
+					SetActive(false);
+				}
 			}
 		}
 		else
 		{
-			if(Info.m_aNotification[0] && Team != TEAM_RED)
+		if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != 0)
 			{
-				if(Info.m_TimeLeft)
-					str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
-				else
-					str_copy(aBuf, Localize("locked"), sizeof(aBuf));
-			}
-			else
-				str_copy(aBuf, Localize(Team != TEAM_RED ? "Join" : "Joined"), sizeof(aBuf)); //Localize("Join");Localize("Joined");
-
-			ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
-			static CButtonContainer s_JoinButton;
-			if(DoButton_Menu(&s_JoinButton, aBuf, Team == TEAM_RED, &Button) && Team != TEAM_RED && !(Info.m_aNotification[0]))
-			{
-				m_pClient->SendSwitchTeam(TEAM_RED);
-				SetActive(false);
+			    ButtonBar.VSplitLeft(10.0f, 0, &ButtonBar);
+				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
+				static CButtonContainer s_SpectateButton;
+				if(DoButton_MenuTabTop(&s_SpectateButton, Localize("Join game"), 0, &Button))
+				{
+					m_pClient->SendSwitchTeam(0);
+					SetActive(false);
+				}
 			}
 		}
+	}
 
-		// disconnect button
-		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
-		static CButtonContainer s_DisconnectButton;
-		if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
-			Client()->Disconnect();
-
-		// Record button
-		ButtonRow.VSplitRight(50.0f, &ButtonRow, 0);
-		ButtonRow.VSplitRight(ButtonWidth, &ButtonRow, &Button);
-		static CButtonContainer s_DemoButton;
-		bool Recording = DemoRecorder()->IsRecording();
-		if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record"), Recording, &Button))	// Localize("Stop record");Localize("Record");
-		{
-			if(!Recording)
-				Client()->DemoRecorder_Start("demo", true);
-			else
-				Client()->DemoRecorder_Stop();
-		}
+	// Record button
+	ButtonBar.VSplitRight(100.0f, &ButtonBar, 0);
+	ButtonBar.VSplitRight(150.0f, &ButtonBar, &Button);
+	static CButtonContainer s_DemoButton;
+	bool Recording = DemoRecorder()->IsRecording();
+	if(DoButton_MenuTabTop(&s_DemoButton, Localize(Recording ? "Stop" : "Record"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
+	{
+		if(!Recording)
+			Client()->DemoRecorder_Start("demo", true);
+		else
+			Client()->DemoRecorder_Stop();
 	}
 }
 
@@ -373,7 +335,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Server info"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	RenderTools()->DrawUIRect(&ServerInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	ServerInfo.Margin(5.0f, &ServerInfo);
-	
+
 	ServerInfo.HSplitTop(2*ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, CurrentServerInfo.m_aName, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT, Label.w);
@@ -382,7 +344,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Address"), g_Config.m_UiServerAddress);
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-	
+
 	ServerInfo.HSplitTop(ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency);
@@ -397,7 +359,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Password"), CurrentServerInfo.m_Flags&IServerBrowser::FLAG_PASSWORD ? Localize("Yes", "With") : Localize("No", "Without/None"));
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-	
+
 	const bool IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
 	ServerInfo.HSplitBottom(ButtonHeight, &ServerInfo, &Label);
 	static int s_AddFavButton = 0;
@@ -442,7 +404,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	GameInfo.HSplitTop(ButtonHeight, &Label, &GameInfo);
 	Label.y += 2.0f;
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Difficulty"), (CurrentServerInfo.m_ServerLevel == 0) ? Localize("Casual", "Server difficulty") : 
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Difficulty"), (CurrentServerInfo.m_ServerLevel == 0) ? Localize("Casual", "Server difficulty") :
 		(CurrentServerInfo.m_ServerLevel == 1 ? Localize("Normal", "Server difficulty") : Localize("Competitive", "Server difficulty")));
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
@@ -488,7 +450,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, pOption);
 
 		if(Item.m_Visible)
-		{			
+		{
 			Item.m_Rect.VMargin(5.0f, &Item.m_Rect);
 			Item.m_Rect.y += 2.0f;
 			UI()->DoLabel(&Item.m_Rect, pOption->m_aDescription, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
@@ -511,7 +473,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 		{
 			if(i == m_pClient->m_LocalClientID || !m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Teams[Team] ||
 				(FilterSpectators && m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS) ||
-				(!FilterSpectators && m_pClient->m_Snap.m_paPlayerInfos[i] && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_ADMIN)))
+				(!FilterSpectators && m_pClient->m_Snap.m_paPlayerInfos[i] && m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_ADMIN))
 				continue;
 			if(m_CallvoteSelectedPlayer == i)
 				Selected = NumOptions;
@@ -664,12 +626,14 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	else if(s_ControlPage == 2 && !m_pClient->m_ServerSettings.m_SpecVote)
 		pNotification = Localize("Server does not allow voting to move players to spectators");
 
+/*
 	if(pNotification && !Authed)
 	{
 		MainView.HSplitTop(20.0f+45.0f, &MainView, 0);
 	}
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
+*/
 	if(pNotification && !Authed)
 	{
 		// only print notice
@@ -682,7 +646,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	// render background
 	MainView.HSplitBottom(90.0f+2*20.0f, &MainView, &Extended);
 	RenderTools()->DrawUIRect(&Extended, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-	
+
 	bool doCallVote = false;
 	// render page
 	if(s_ControlPage == 0)
@@ -703,6 +667,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		CUIRect Reason, ClearButton, Label;
 		Bottom.VSplitRight(40.0f, &Bottom, 0);
 		Bottom.VSplitRight(160.0f, &Bottom, &Reason);
+		Reason.HSplitTop(5.0f, 0, &Reason);
 		Reason.VSplitRight(Reason.h, &Reason, &ClearButton);
 		const char *pLabel = Localize("Reason:");
 		float w = TextRender()->TextWidth(0, Reason.h*ms_FontmodHeight*0.8f, pLabel, -1);
@@ -710,7 +675,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Label.y += 2.0f;
 		UI()->DoLabel(&Label, pLabel, Reason.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 		static float s_Offset = 0.0f;
-		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), Reason.h*ms_FontmodHeight*0.8f, &s_Offset, false, CUI::CORNER_L);
+		DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_L);
 
 		// clear button
 		{
@@ -734,7 +699,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		else
 		{
 			// print notice
-			UI()->DoLabel(&Note, pNotification, Note.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT, Note.w);
+			UI()->DoLabelScaled(&Bottom, pNotification, 14.0f, CUI::ALIGN_LEFT, Bottom.w);
 		}
 
 		// extended features (only available when authed in rcon)
@@ -760,7 +725,6 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				static CButtonContainer s_RemoveVoteButton;
 				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
 					m_pClient->m_pVoting->RemovevoteOption(m_CallvoteSelectedOption);
-
 
 				// add vote
 				Extended.HSplitTop(20.0f, &Bottom, &Extended);
