@@ -257,7 +257,7 @@ void CMenus::SaveFilters()
 		if(i == 0)
 			p = "\n";
 		else
-			p = ",\n"; 
+			p = ",\n";
 		io_write(File, p, str_length(p));
 
 		str_format(aBuf, sizeof(aBuf), "\t{\"%s\": {\n", m_lFilters[i].Name());
@@ -1032,7 +1032,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	int NumFilters = m_lFilters.size();
 	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
-	ListHeight += NumFilters * SpacingH; // add filters 
+	ListHeight += NumFilters * SpacingH; // add filters
 	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
 	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1 && m_ShowServerDetails)
 		ListHeight += ms_ListheaderHeight*5;
@@ -1841,7 +1841,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	if(pInfo)
 	{
 		CUIRect Row;
-		// Localize("Map"); Localize("Game type"); Localize("Version"); Localize("Casual"); Localize("Normal"); Localize("Difficulty"); Localize("Competitive"); 
+		// Localize("Map"); Localize("Game type"); Localize("Version"); Localize("Casual", "Server difficulty"); Localize("Normal", "Server difficulty"); Localize("Competitive", "Server difficulty"); Localize("Difficulty");
 		static CLocConstString s_aLabels[] = {
 			"Map",		
 			"Game type",
@@ -1860,12 +1860,12 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		{
 
 			LeftColumn.HSplitTop(15.0f, &Row, &LeftColumn);
-			UI()->DoLabelScaled(&Row, s_aLabels[i], FontSize, CUI::ALIGN_LEFT);
+			UI()->DoLabelScaled(&Row, s_aLabels[i], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 		}
 
 		// map
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pInfo->m_aMap, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aMap, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// game type
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
@@ -1873,11 +1873,11 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		Row.VSplitLeft(Row.h, &Icon, &Row);
 		Icon.y -= 2.0f;
 		DoGameIcon(pInfo->m_aGameType, &Icon, CGameIcon::GAMEICON_FULL);
-		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aGameType, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// version
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabelScaled(&Row, pInfo->m_aVersion, FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, pInfo->m_aVersion, FontSize, CUI::ALIGN_LEFT, Row.w, false);
 
 		// difficulty
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
@@ -1894,7 +1894,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 		case 2:
 			DoIcon(IMAGE_LEVELICONS, SPRITE_LEVEL_C_ON, &Icon);
 		}
-		UI()->DoLabelScaled(&Row, s_aDifficulty[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT);
+		UI()->DoLabelScaled(&Row, s_aDifficulty[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 	}
 }
 
@@ -2170,12 +2170,13 @@ void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect, int Type)
 int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
-	int l = str_length(pName);
-	if(l < 5 || IsDir || str_comp(pName + l - 4, ".png") != 0)
+	const char *pSuffix = str_endswith(pName, ".png");
+	if(IsDir || !pSuffix)
+	{
 		return 0;
-
-	char aGameIconName[128] = { 0 };
-	str_copy(aGameIconName, pName, min((int)sizeof(aGameIconName), l - 3));
+	}
+	char aGameIconName[128];
+	str_truncate(aGameIconName, sizeof(aGameIconName), pName, pSuffix - pName);
 
 	// add new game icon
 	char aBuf[512];

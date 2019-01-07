@@ -30,12 +30,15 @@ void CMenus::GetSwitchTeamInfo(CSwitchTeamInfo *pInfo)
 	pInfo->m_AllowSpec = true;
 	pInfo->m_TimeLeft = 0;
 
-	if(TeamMod + m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE] >= m_pClient->m_ServerSettings.m_PlayerSlots)
+	if(m_pClient->m_ServerSettings.m_TeamLock)
+	{
+		str_copy(pInfo->m_aNotification, Localize("Teams are locked"), sizeof(pInfo->m_aNotification));
+		pInfo->m_AllowSpec = false;
+	}
+	else if(TeamMod + m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED] + m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE] >= m_pClient->m_ServerSettings.m_PlayerSlots)
 	{
 		str_format(pInfo->m_aNotification, sizeof(pInfo->m_aNotification), Localize("Only %d active players are allowed"), m_pClient->m_ServerSettings.m_PlayerSlots);
 	}
-	else if(m_pClient->m_ServerSettings.m_TeamLock)
-		str_copy(pInfo->m_aNotification, Localize("Teams are locked"), sizeof(pInfo->m_aNotification));
 	else if(m_pClient->m_TeamCooldownTick + 1 >= Client()->GameTick())
 	{
 		pInfo->m_TimeLeft = (m_pClient->m_TeamCooldownTick - Client()->GameTick()) / Client()->GameTickSpeed() + 1;
@@ -86,7 +89,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 		// specator button
 		int Team = m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team;
-		if(Info.m_aNotification[0] && Team != TEAM_SPECTATORS)
+		if(!Info.m_AllowSpec && Team != TEAM_SPECTATORS)
 		{
 			if(Info.m_TimeLeft)
 				str_format(aBuf, sizeof(aBuf), "(%d)", Info.m_TimeLeft);
@@ -99,7 +102,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		ButtonRow.VSplitLeft(ButtonWidth, &Button, &ButtonRow);
 		ButtonRow.VSplitLeft(Spacing, 0, &ButtonRow);
 		static CButtonContainer s_SpectateButton;
-		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec && !(Info.m_aNotification[0]))
+		if(DoButton_Menu(&s_SpectateButton, aBuf, Team == TEAM_SPECTATORS, &Button) && Team != TEAM_SPECTATORS && Info.m_AllowSpec)
 		{
 			m_pClient->SendSwitchTeam(TEAM_SPECTATORS);
 			SetActive(false);
@@ -111,15 +114,10 @@ void CMenus::RenderGame(CUIRect MainView)
 			int RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
 			if(Team != TEAM_RED)
 				++RedTeamSizeNew;
-			else if(Team == TEAM_RED)
-				--RedTeamSizeNew;
 			int BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
-			if(Team != TEAM_BLUE)
-				++BlueTeamSizeNew;
-			else if(Team == TEAM_BLUE)
+			if(Team == TEAM_BLUE)
 				--BlueTeamSizeNew;
 			bool BlockRed = m_pClient->m_ServerSettings.m_TeamBalance && (RedTeamSizeNew - BlueTeamSizeNew >= NUM_TEAMS);
-			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
 			if((Info.m_aNotification[0] && Team != TEAM_RED) || BlockRed)
 			{
 				if(Info.m_TimeLeft)
@@ -139,6 +137,13 @@ void CMenus::RenderGame(CUIRect MainView)
 				SetActive(false);
 			}
 
+			RedTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED];
+			if(Team == TEAM_RED)
+				--RedTeamSizeNew;
+			BlueTeamSizeNew = m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE];
+			if(Team != TEAM_BLUE)
+				++BlueTeamSizeNew;
+			bool BlockBlue = m_pClient->m_ServerSettings.m_TeamBalance && (BlueTeamSizeNew - RedTeamSizeNew >= NUM_TEAMS);
 			if((Info.m_aNotification[0] && Team != TEAM_BLUE) || BlockBlue)
 			{
 				if(Info.m_TimeLeft)
@@ -437,8 +442,8 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	GameInfo.HSplitTop(ButtonHeight, &Label, &GameInfo);
 	Label.y += 2.0f;
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Difficulty"), (CurrentServerInfo.m_ServerLevel == 0) ? Localize("Casual") : 
-		(CurrentServerInfo.m_ServerLevel == 1 ? Localize("Normal") : Localize("Competitive")));
+	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Difficulty"), (CurrentServerInfo.m_ServerLevel == 0) ? Localize("Casual", "Server difficulty") : 
+		(CurrentServerInfo.m_ServerLevel == 1 ? Localize("Normal", "Server difficulty") : Localize("Competitive", "Server difficulty")));
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 	GameInfo.HSplitTop(ButtonHeight, &Label, &GameInfo);
