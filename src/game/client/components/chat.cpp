@@ -10,6 +10,7 @@
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
+#include <game/client/animstate.h>
 #include <game/client/gameclient.h>
 #include <game/client/localization.h>
 
@@ -804,7 +805,7 @@ void CChat::OnRender()
 		const float HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
 
 		// reset the cursor
-		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Cursor, Begin+4, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
 
 		const vec2 ShadowOffset(0.8f, 1.5f);
@@ -923,6 +924,14 @@ void CChat::OnRender()
 			str_format(aBuf, sizeof(aBuf), "%s: ", Line.m_aName);
 			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
 		}
+
+        if (m_aLines[r].m_ClientID != -1)
+        {
+            CGameClient::CClientData *pClientData = &m_pClient->m_aClients[m_aLines[r].m_ClientID];
+            CTeeRenderInfo RenderInfo = pClientData->m_RenderInfo;
+            RenderInfo.m_Size = 8.0f;
+            RenderTools()->RenderTee(CAnimState::GetIdle(), &RenderInfo, 0, vec2(1.0f, 0.0f), vec2(Begin, y+FontSize-1.5f));
+        }
 
 		// render line
 		if(Line.m_ClientID == -1)
