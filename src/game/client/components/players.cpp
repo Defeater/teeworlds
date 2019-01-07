@@ -435,6 +435,33 @@ void CPlayers::RenderPlayer(
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
 
+	 int emote = -1;
+     switch(m_pClient->m_aClients[ClientID].m_Emoticon) {
+      case 0: emote = EMOTE_PAIN; break;
+      case 1: emote = EMOTE_SURPRISE; break;
+      case 2: emote = EMOTE_HAPPY; break;
+      case 3: emote = EMOTE_BLINK; break;
+      case 4: emote = EMOTE_BLINK; break;
+      case 5: emote = EMOTE_HAPPY; break;
+      case 6: emote = EMOTE_PAIN; break;
+      case 7: emote = EMOTE_SURPRISE; break;
+      case 8: emote = EMOTE_PAIN; break;
+      case 9: emote = EMOTE_ANGRY; break;
+      case 10: emote = EMOTE_ANGRY; break;
+      case 11: emote = EMOTE_ANGRY; break;
+      case 12: emote = EMOTE_BLINK; break;
+      case 13: emote = EMOTE_SURPRISE; break;
+      case 14: emote = EMOTE_HAPPY; break;
+      case 15: emote = EMOTE_SURPRISE; break;
+     }
+
+    if(m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+        Player.m_Emote = emote;
+
+    if(m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() < Client()->GameTick() &&
+    (Client()->GameTick() - m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() < Client()->GameTickSpeed()*5))
+        Player.m_Emote = EMOTE_NORMAL;
+
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
 
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
