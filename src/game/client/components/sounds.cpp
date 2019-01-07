@@ -7,6 +7,7 @@
 #include <game/client/gameclient.h>
 #include <game/client/components/camera.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/bdadash.h>
 #include "sounds.h"
 
 
@@ -39,7 +40,7 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 {
 	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return ISound::CSampleHandle();
-	
+
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
 	if(!pSet->m_NumSounds)
 		return ISound::CSampleHandle();
@@ -171,7 +172,7 @@ void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 {
 	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
 		return;
-	
+
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
 	if(!SampleId.IsValid())
 		return;
@@ -180,6 +181,7 @@ void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 	if(Chn == CHN_MUSIC)
 		Flags = ISound::FLAG_LOOP;
 
+    m_pClient->m_pBdadash->Create(Pos, SetId);
 	Sound()->PlayAt(Chn, SampleId, Flags, Pos.x, Pos.y);
 }
 
