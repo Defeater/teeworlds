@@ -25,3 +25,5 @@ scripts/work/
 other/freetype/bin/freetype-config
 *.html
 *.exe
+*.lib
+*.zip
