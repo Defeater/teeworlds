@@ -768,6 +768,6 @@ void CMenus::TestMap()
 	system("taskkill /F /IM teeworlds_srv.exe");
 	str_format(aBuf, sizeof(aBuf), "start %s -f server\\map_test.cfg", aServerExe);
 	system(aBuf);
-}
 #endif
+}
 
